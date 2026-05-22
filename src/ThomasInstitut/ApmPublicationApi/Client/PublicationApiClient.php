@@ -33,16 +33,13 @@ readonly class PublicationApiClient
         try {
             $request = $this->requestFactory->createRequest('GET', $url);
             $response = $this->client->sendRequest($request);
-            $data = json_decode($response->getBody()->getContents(), true);
+            $data = $this->parseAndValidateResponse($response->getBody()->getContents());
 
-            if ($data['result'] === ApiResponse::ResultError) {
-                throw new InvalidResponseFromServerException($data['message'] ?? 'Unknown server error');
-            }
             $apiResponse = new PublicationApiListResponse();
             $apiResponse->result = $data['result'] ?? ApiResponse::ResultUndefined;
             $apiResponse->timeStamp = $data['timeStamp'] ?? -1;
             $apiResponse->publications = [];
-            if (!isset($data['publications'])) {
+            if (!isset($data['publications']) || !is_array($data['publications'])) {
                 throw new InvalidResponseFromServerException("Invalid response from server: no publication array");
             }
             foreach( $data['publications'] as $publication) {
@@ -68,12 +65,12 @@ readonly class PublicationApiClient
         try {
             $request = $this->requestFactory->createRequest('GET', $url);
             $response = $this->client->sendRequest($request);
-            $data = json_decode($response->getBody()->getContents(), true);
+            $data = $this->parseAndValidateResponse($response->getBody()->getContents());
 
             $apiResponse = new PublicationApiGetResponse();
             $apiResponse->result = $data['result'] ?? ApiResponse::ResultUndefined;
             $apiResponse->timeStamp = $data['timeStamp'] ?? -1;
-            if (!isset($data['publicationData']) || !isset($data['publicationData']['type'])) {
+            if (!isset($data['publicationData']) || !is_array($data['publicationData']) || !isset($data['publicationData']['type'])) {
                 throw new InvalidResponseFromServerException("Invalid response from server: no publication type");
             }
             switch ($data['publicationData']['type']) {
@@ -91,5 +88,27 @@ readonly class PublicationApiClient
         } catch (MissingRequiredValueException|WrongValueTypeException $e) {
             throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), $e->getCode(), $e);
         }
+    }
+
+    /**
+     * @throws InvalidResponseFromServerException
+     */
+    private function parseAndValidateResponse(string $jsonBody): array
+    {
+        try {
+            $data = json_decode($jsonBody, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new InvalidResponseFromServerException("Invalid JSON response from server: " . $e->getMessage(), $e->getCode(), $e);
+        }
+
+        if (!is_array($data)) {
+            throw new InvalidResponseFromServerException("Invalid response from server: expected JSON object or array");
+        }
+
+        if (($data['result'] ?? ApiResponse::ResultUndefined) === ApiResponse::ResultError) {
+            throw new InvalidResponseFromServerException($data['message'] ?? 'Unknown server error');
+        }
+
+        return $data;
     }
 }

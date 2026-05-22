@@ -30,7 +30,8 @@ class PublicationApiClientTest extends TestCase
         } else {
             $response = $this->createStub(ResponseInterface::class);
             $stream = $this->createStub(StreamInterface::class);
-            $stream->method('getContents')->willReturn(json_encode($responseData));
+            $content = is_string($responseData) ? $responseData : json_encode($responseData);
+            $stream->method('getContents')->willReturn($content);
             $response->method('getBody')->willReturn($stream);
             $client->method('sendRequest')->willReturn($response);
         }
@@ -231,5 +232,59 @@ class PublicationApiClientTest extends TestCase
         $this->expectException(InvalidResponseFromServerException::class);
         $this->expectExceptionMessage('Invalid publication type: unknown');
         $client->get(123);
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testListThrowsOnMalformedJson(): void
+    {
+        $client = $this->createClient("invalid json");
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('Invalid JSON response from server');
+        $client->list();
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testGetThrowsOnMalformedJson(): void
+    {
+        $client = $this->createClient("invalid json");
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('Invalid JSON response from server');
+        $client->get(123);
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testGetThrowsOnServerError(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultError,
+            'message' => 'Something went wrong on get'
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('Something went wrong on get');
+        $client->get(123);
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testListThrowsOnInvalidPublicationsType(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'publications' => 'not an array'
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('no publication array');
+        $client->list();
     }
 }
