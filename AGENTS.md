@@ -34,7 +34,8 @@ The client expects two endpoints relative to a configured Guzzle base URI:
 - `PublicationApiClient::list()`
   - calls `GET list`
   - decodes JSON
-  - returns `ThomasInstitut\StandardApi\ErrorResponse` on server-declared errors, transport errors, or invalid payloads
+  - throws `ThomasInstitut\ApmPublicationApi\Client\HttpClientException` on transport errors
+  - throws `ThomasInstitut\ApmPublicationApi\Client\InvalidResponseFromServerException` on server-declared errors or invalid payloads
   - otherwise hydrates a `PublicationApiListResponse` containing `PublicationListing[]`
 
 - `PublicationApiClient::get(int $id)`
@@ -42,7 +43,8 @@ The client expects two endpoints relative to a configured Guzzle base URI:
   - decodes JSON
   - validates `publicationData.type`
   - currently hydrates only `TextPublicationData`
-  - returns `ErrorResponse` for unsupported/invalid cases
+  - throws `ThomasInstitut\ApmPublicationApi\Client\HttpClientException` on transport errors
+  - throws `ThomasInstitut\ApmPublicationApi\Client\InvalidResponseFromServerException` on unsupported/invalid cases or server-declared errors
 
 ### Hydration model
 - `PublicationListing` uses `FromFlatArrayTrait` from the shared dependency.
@@ -53,9 +55,9 @@ The client expects two endpoints relative to a configured Guzzle base URI:
 ## Important implementation notes
 - Keep namespace/path alignment exact: `ThomasInstitut\...` maps to `src/ThomasInstitut/`.
 - This codebase uses simple public-property DTOs rather than immutable value objects.
-- Error handling is intentionally union-based:
+- Error handling uses exceptions:
   - success: `PublicationApiListResponse` / `PublicationApiGetResponse`
-  - failure: `ErrorResponse`
+  - failure: throws `PublicationApiClientException` (or specific subclasses)
 - The tests use Guzzle's `MockHandler`; follow that pattern for client tests.
 
 ## Development commands

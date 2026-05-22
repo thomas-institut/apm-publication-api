@@ -12,7 +12,6 @@ use ThomasInstitut\ApmPublicationApi\TextPublicationData;
 use ThomasInstitut\Settable\MissingRequiredValueException;
 use ThomasInstitut\Settable\WrongValueTypeException;
 use ThomasInstitut\StandardApi\ApiResponse;
-use ThomasInstitut\StandardApi\ErrorResponse;
 
 readonly class PublicationApiClient
 {
@@ -20,7 +19,11 @@ readonly class PublicationApiClient
     {
     }
 
-    public function list(): PublicationApiListResponse | ErrorResponse
+    /**
+     * @throws InvalidResponseFromServerException
+     * @throws HttpClientException
+     */
+    public function list(): PublicationApiListResponse
     {
         $url = 'list';
         try {
@@ -28,16 +31,14 @@ readonly class PublicationApiClient
             $data = json_decode($response->getBody()->getContents(), true);
 
             if ($data['result'] === ApiResponse::ResultError) {
-                $errorResponse = new  ErrorResponse($data['message']);
-                $errorResponse->httpStatus = $data['httpStatus'] ?? 500;
-                return $errorResponse;
+                throw new InvalidResponseFromServerException($data['message'] ?? 'Unknown server error');
             }
             $apiResponse = new PublicationApiListResponse();
             $apiResponse->result = $data['result'] ?? ApiResponse::ResultUndefined;
             $apiResponse->timeStamp = $data['timeStamp'] ?? -1;
             $apiResponse->publications = [];
             if (!isset($data['publications'])) {
-                return new ErrorResponse("Invalid response from server: no publication array");
+                throw new InvalidResponseFromServerException("Invalid response from server: no publication array");
             }
             foreach( $data['publications'] as $publication) {
                 $pubObject = new PublicationListing();
@@ -46,14 +47,17 @@ readonly class PublicationApiClient
             }
             return $apiResponse;
         } catch (GuzzleException $e) {
-            // TODO: add http status from exception
-            return new ErrorResponse( "Guzzle error: " . $e->getMessage());
+            throw new HttpClientException("Http client error: " . $e->getMessage(), $e->getCode(), $e);
         } catch (MissingRequiredValueException|WrongValueTypeException $e) {
-            return new ErrorResponse("Server response is invalid: " . $e->getMessage());
+            throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
-    public function get(int $id): PublicationApiGetResponse | ErrorResponse
+    /**
+     * @throws InvalidResponseFromServerException
+     * @throws HttpClientException
+     */
+    public function get(int $id): PublicationApiGetResponse
     {
         $url =  "$id/get";
         try {
@@ -64,7 +68,7 @@ readonly class PublicationApiClient
             $apiResponse->result = $data['result'] ?? ApiResponse::ResultUndefined;
             $apiResponse->timeStamp = $data['timeStamp'] ?? -1;
             if (!isset($data['publicationData']) || !isset($data['publicationData']['type'])) {
-                return new ErrorResponse("Invalid response from server: no publication type");
+                throw new InvalidResponseFromServerException("Invalid response from server: no publication type");
             }
             switch ($data['publicationData']['type']) {
                 case PublicationType::Text:
@@ -73,14 +77,13 @@ readonly class PublicationApiClient
                     break;
 
                 default:
-                    return new ErrorResponse("Invalid publication type: {$data['publicationData']['type']}");
+                    throw new InvalidResponseFromServerException("Invalid publication type: {$data['publicationData']['type']}");
             }
             return $apiResponse;
         } catch (GuzzleException $e) {
-            // TODO: add http status from exception
-            return new ErrorResponse( "Guzzle error: " . $e->getMessage());
+            throw new HttpClientException("Guzzle error: " . $e->getMessage(), $e->getCode(), $e);
         } catch (MissingRequiredValueException|WrongValueTypeException $e) {
-            return new ErrorResponse("Server response is invalid: " . $e->getMessage());
+            throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), $e->getCode(), $e);
         }
     }
 }
