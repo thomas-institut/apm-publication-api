@@ -9,6 +9,8 @@ use JsonException;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use ThomasInstitut\ApmPublicationApi\PublicationApiGetResponse;
 use ThomasInstitut\ApmPublicationApi\PublicationApiListResponse;
 use ThomasInstitut\ApmPublicationApi\PublicationListing;
@@ -19,12 +21,14 @@ use ThomasInstitut\StandardApi\ApiResult;
 
 readonly class PublicationApiClient
 {
-    private TreeMapper $mapper;
 
+    private TreeMapper $mapper;
     public function __construct(
         private ClientInterface         $client,
         private RequestFactoryInterface $requestFactory,
-        private string                  $baseUrl
+        private string                  $baseUrl,
+        private LoggerInterface         $logger = new NullLogger(),
+        private bool                    $debug = false
     )
     {
         class_exists(ApiResponse::class);
@@ -42,12 +46,13 @@ readonly class PublicationApiClient
             $request = $this->requestFactory->createRequest('GET', $url);
             $response = $this->client->sendRequest($request);
             $data = $this->parseAndValidateResponse($response->getBody()->getContents());
+            $this->debug && $this->logger->debug("Publication API response for 'list': ", $data);
 
             $apiResponse = new PublicationApiListResponse();
             $this->hydrateBaseResponse($apiResponse, $data);
 
             if (!isset($data['publications']) || !is_array($data['publications'])) {
-                throw new InvalidResponseFromServerException("Invalid response from server: no publication array");
+                throw new InvalidResponseFromServerException("Invalid response from server: no publications array");
             }
 
             try {
@@ -78,6 +83,7 @@ readonly class PublicationApiClient
             $request = $this->requestFactory->createRequest('GET', $url);
             $response = $this->client->sendRequest($request);
             $data = $this->parseAndValidateResponse($response->getBody()->getContents());
+            $this->debug && $this->logger->debug("Publication API response for 'get $id': ", $data);
 
             $apiResponse = new PublicationApiGetResponse();
             $this->hydrateBaseResponse($apiResponse, $data);

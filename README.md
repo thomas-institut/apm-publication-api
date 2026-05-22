@@ -78,6 +78,9 @@ $apiClient = new PublicationApiClient(
     $baseUrl
 );
 
+// Optional: you can also provide a logger and enable debug mode
+// $apiClient = new PublicationApiClient($httpClient, $requestFactory, $baseUrl, $logger, true);
+
 // Example usage:
 try {
     $listResponse = $apiClient->list();
@@ -93,5 +96,7 @@ try {
 - **`GuzzleHttp\Client`**: Implements `Psr\Http\Client\ClientInterface`.
 - **`GuzzleHttp\Psr7\HttpFactory`**: Implements `Psr\Http\Message\RequestFactoryInterface`.
 - **`baseUrl`**: The base URL for the APM API (e.g., `https://example.com/api`). The client automatically appends `/publication/list` or `/publication/{id}/get` to this URL.
+- **`logger`**: (Optional) A `Psr\Log\LoggerInterface` to log API requests and responses. Defaults to `NullLogger`.
+- **`debug`**: (Optional) Set to `true` to enable detailed debug logging. Defaults to `false`.
 
 

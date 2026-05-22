@@ -187,7 +187,7 @@ class PublicationApiClientTest extends TestCase
         ]);
 
         $this->expectException(InvalidResponseFromServerException::class);
-        $this->expectExceptionMessage('no publication array');
+        $this->expectExceptionMessage('no publications array');
         $client->list();
     }
 
@@ -291,7 +291,7 @@ class PublicationApiClientTest extends TestCase
         ]);
 
         $this->expectException(InvalidResponseFromServerException::class);
-        $this->expectExceptionMessage('no publication array');
+        $this->expectExceptionMessage('no publications array');
         $client->list();
     }
 
