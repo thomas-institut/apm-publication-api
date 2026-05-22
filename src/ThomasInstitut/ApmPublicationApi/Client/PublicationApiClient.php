@@ -63,6 +63,7 @@ readonly class PublicationApiClient
                 );
                 $apiResponse->publications = $publications;
             } catch (MappingError $e) {
+                $this->debug && $this->logger->debug("Mapping error in 'list': ", [ ...$e->messages()]);
                 throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), 0, $e);
             }
 
@@ -102,6 +103,7 @@ readonly class PublicationApiClient
                     default => throw new InvalidResponseFromServerException("Invalid publication type: $type"),
                 };
             } catch (MappingError $e) {
+                $this->debug && $this->logger->debug("Mapping error in 'get $id': ", [ ...$e->messages()]);
                 throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), 0, $e);
             }
             return $apiResponse;
