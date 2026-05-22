@@ -1,9 +1,14 @@
 <?php
 
-namespace ThomasInstitut\ApmPublicationApi;
+namespace ThomasInstitut\ApmPublicationApi\Client;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
+use ThomasInstitut\ApmPublicationApi\PublicationApiGetResponse;
+use ThomasInstitut\ApmPublicationApi\PublicationApiListResponse;
+use ThomasInstitut\ApmPublicationApi\PublicationListing;
+use ThomasInstitut\ApmPublicationApi\PublicationType;
+use ThomasInstitut\ApmPublicationApi\TextPublicationData;
 use ThomasInstitut\Settable\MissingRequiredValueException;
 use ThomasInstitut\Settable\WrongValueTypeException;
 use ThomasInstitut\StandardApi\ApiResponse;
