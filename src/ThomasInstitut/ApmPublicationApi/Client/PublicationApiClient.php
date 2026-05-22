@@ -38,6 +38,7 @@ readonly class PublicationApiClient
     /**
      * @throws InvalidResponseFromServerException
      * @throws HttpClientException
+     * @throws NotFoundException
      */
     public function list(): PublicationApiListResponse
     {
@@ -45,6 +46,12 @@ readonly class PublicationApiClient
         try {
             $request = $this->requestFactory->createRequest('GET', $url);
             $response = $this->client->sendRequest($request);
+            if ($response->getStatusCode() !== 200) {
+                if ($response->getStatusCode() === 404) {
+                    throw new NotFoundException("Publication not found");
+                }
+                throw new HttpClientException("Http client error: " . $response->getReasonPhrase());
+            }
             $data = $this->parseAndValidateResponse($response->getBody()->getContents());
             $this->debug && $this->logger->debug("Publication API response for 'list': ", $data);
 
@@ -66,7 +73,6 @@ readonly class PublicationApiClient
                 $this->debug && $this->logger->debug("Mapping error in 'list': ", [ ...$e->messages()]);
                 throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), 0, $e);
             }
-
             return $apiResponse;
         } catch (ClientExceptionInterface $e) {
             throw new HttpClientException("Http client error: " . $e->getMessage(), $e->getCode(), $e);
@@ -75,7 +81,7 @@ readonly class PublicationApiClient
 
     /**
      * @throws InvalidResponseFromServerException
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function get(int $id): PublicationApiGetResponse
     {
@@ -83,6 +89,12 @@ readonly class PublicationApiClient
         try {
             $request = $this->requestFactory->createRequest('GET', $url);
             $response = $this->client->sendRequest($request);
+            if ($response->getStatusCode() !== 200) {
+                if ($response->getStatusCode() === 404) {
+                    throw new NotFoundException("Publication not found");
+                }
+                throw new HttpClientException("Http client error: " . $response->getReasonPhrase());
+            }
             $data = $this->parseAndValidateResponse($response->getBody()->getContents());
             $this->debug && $this->logger->debug("Publication API response for 'get $id': ", $data);
 

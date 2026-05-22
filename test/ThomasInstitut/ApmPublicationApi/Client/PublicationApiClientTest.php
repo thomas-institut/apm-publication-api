@@ -18,7 +18,7 @@ use ThomasInstitut\StandardApi\ApiResult;
 
 class PublicationApiClientTest extends TestCase
 {
-    private function createClient(mixed $responseData = null, ?Exception $exception = null): PublicationApiClient
+    private function createClient(mixed $responseData = null, ?Exception $exception = null, int $statusCode = 200): PublicationApiClient
     {
         class_exists(ApiResponse::class);
         $client = $this->createStub(ClientInterface::class);
@@ -31,6 +31,7 @@ class PublicationApiClientTest extends TestCase
             $client->method('sendRequest')->willThrowException($exception);
         } else {
             $response = $this->createStub(ResponseInterface::class);
+            $response->method('getStatusCode')->willReturn($statusCode);
             $stream = $this->createStub(StreamInterface::class);
             $content = is_string($responseData) ? $responseData : json_encode($responseData);
             $stream->method('getContents')->willReturn($content);
@@ -60,6 +61,7 @@ class PublicationApiClientTest extends TestCase
             'publications' => []
         ]));
         $response->method('getBody')->willReturn($stream);
+        $response->method('getStatusCode')->willReturn(200);
         $client->method('sendRequest')->willReturn($response);
 
         $requestFactory->expects($this->once())
@@ -97,6 +99,7 @@ class PublicationApiClientTest extends TestCase
             ]
         ]));
         $response->method('getBody')->willReturn($stream);
+        $response->method('getStatusCode')->willReturn(200);
         $client->method('sendRequest')->willReturn($response);
 
         $requestFactory->expects($this->once())
@@ -462,5 +465,41 @@ class PublicationApiClientTest extends TestCase
         $this->expectException(InvalidResponseFromServerException::class);
         $this->expectExceptionMessage('expected JSON object with string keys');
         $client->list();
+    }
+
+    public function testListThrowsOn404(): void
+    {
+        $client = $this->createClient(null, null, 404);
+
+        $this->expectException(NotFoundException::class);
+        $this->expectExceptionMessage('Publication not found');
+        $client->list();
+    }
+
+    public function testGetThrowsOn404(): void
+    {
+        $client = $this->createClient(null, null, 404);
+
+        $this->expectException(NotFoundException::class);
+        $this->expectExceptionMessage('Publication not found');
+        $client->get(123);
+    }
+
+    public function testListThrowsOn500(): void
+    {
+        $client = $this->createClient(null, null, 500);
+
+        $this->expectException(HttpClientException::class);
+        $this->expectExceptionMessage('Http client error');
+        $client->list();
+    }
+
+    public function testGetThrowsOn500(): void
+    {
+        $client = $this->createClient(null, null, 500);
+
+        $this->expectException(HttpClientException::class);
+        $this->expectExceptionMessage('Http client error');
+        $client->get(123);
     }
 }
