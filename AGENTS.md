@@ -10,7 +10,7 @@ The package is still early-stage / alpha. Prefer small, conservative changes tha
 - Composer package
 - PHPUnit 12 for tests
 - PHPStan 2 (level 4)
-- Guzzle 7 for HTTP
+- PSR-18 for HTTP client, PSR-17 for factories
 - `thomas-institut/php-backend-common` for `StandardApi` response types and `Settable` array hydration helpers
 
 ## Repository layout
@@ -26,9 +26,9 @@ The package is still early-stage / alpha. Prefer small, conservative changes tha
 
 ## Current architecture
 ### API shape
-The client expects two endpoints relative to a configured Guzzle base URI:
-- `list`
-- `{id}/get`
+The client expects two endpoints relative to a configured `baseUrl` (injected in constructor):
+- `/list`
+- `/{id}/get`
 
 ### Main flow
 - `PublicationApiClient::list()`
@@ -58,7 +58,7 @@ The client expects two endpoints relative to a configured Guzzle base URI:
 - Error handling uses exceptions:
   - success: `PublicationApiListResponse` / `PublicationApiGetResponse`
   - failure: throws `PublicationApiClientException` (or specific subclasses)
-- The tests use Guzzle's `MockHandler`; follow that pattern for client tests.
+- The tests use PHPUnit stubs to mock PSR-18/17 interfaces.
 
 ## Development commands
 Run from repo root:

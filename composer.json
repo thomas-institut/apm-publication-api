@@ -22,12 +22,12 @@
   "require": {
     "php": "^8.3",
     "thomas-institut/php-backend-common": "0.0.1",
-    "psr/http-client": "^1.0 "
+    "psr/http-client": "^1.0 ",
+    "psr/http-factory": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^12.5",
-    "phpstan/phpstan": "^2.1",
-    "guzzlehttp/guzzle": "^7.9"
+    "phpstan/phpstan": "^2.1"
   },
   "autoload": {
     "psr-4": {

@@ -2,13 +2,14 @@
 
 namespace ThomasInstitut\ApmPublicationApi\Client;
 
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 use ThomasInstitut\ApmPublicationApi\PublicationListing;
 use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
@@ -18,43 +19,55 @@ use ThomasInstitut\StandardApi\ApiResponse;
 
 class PublicationApiClientTest extends TestCase
 {
+    private function createClient(mixed $responseData = null, ?\Exception $exception = null): PublicationApiClient
+    {
+        $client = $this->createStub(ClientInterface::class);
+        $requestFactory = $this->createStub(RequestFactoryInterface::class);
+        $request = $this->createStub(RequestInterface::class);
+
+        $requestFactory->method('createRequest')->willReturn($request);
+
+        if ($exception) {
+            $client->method('sendRequest')->willThrowException($exception);
+        } else {
+            $response = $this->createStub(ResponseInterface::class);
+            $stream = $this->createStub(StreamInterface::class);
+            $stream->method('getContents')->willReturn(json_encode($responseData));
+            $response->method('getBody')->willReturn($stream);
+            $client->method('sendRequest')->willReturn($response);
+        }
+
+        return new PublicationApiClient($client, $requestFactory, 'http://api.example.com');
+    }
+
     /**
      * @throws InvalidResponseFromServerException
      * @throws HttpClientException
      */
     public function testList(): void
     {
-        $mock = new MockHandler([
-            new Response(200, [], json_encode([
-                'result' => ApiResponse::ResultSuccess,
-                'timeStamp' => 123456789,
-                'publications' => [
-                    ['type' => 'test', 'id' => 1, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Test Publication', 'description' => 'This is a test publication'],
-                    ['type' => 'test', 'id' => 2, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Another Publication', 'description' => 'Another test publication'],
-                    ['type' => 'test', 'id' => 3, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Yet Another Publication', 'description' => 'Yet another test publication']
-                ]
-            ])),
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => 123456789,
+            'publications' => [
+                ['type' => 'test', 'id' => 1, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Test Publication', 'description' => 'This is a test publication'],
+                ['type' => 'test', 'id' => 2, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Another Publication', 'description' => 'Another test publication'],
+                ['type' => 'test', 'id' => 3, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Yet Another Publication', 'description' => 'Yet another test publication']
+            ]
         ]);
 
-        $handlerStack = HandlerStack::create($mock);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $client = new PublicationApiClient($guzzleClient);
         $response = $client->list();
 
-        $this->assertEquals(ApiResponse::ResultSuccess, $response->result, 'Unexpected result: ' . ($response->message ?? ''));
+        $this->assertEquals(ApiResponse::ResultSuccess, $response->result);
         $this->assertEquals(123456789, $response->timeStamp);
         foreach ($response->publications as $publication) {
-            $this->assertInstanceOf(PublicationListing::class, $publication, 'Unexpected publication type: ' . get_class($publication));
+            $this->assertInstanceOf(PublicationListing::class, $publication);
         }
-
     }
 
     /**
      * @throws HttpClientException
      * @throws InvalidResponseFromServerException
-     * @throws MissingRequiredValueException
-     * @throws WrongValueTypeException
      */
     public function testGet(): void
     {
@@ -67,24 +80,15 @@ class PublicationApiClientTest extends TestCase
             'text' => 'This is the text of the publication.'
         ];
 
-        $mock = new MockHandler([
-            new Response(200, [], json_encode([
-                'result' => 'Success',
-                'timeStamp' => 123456789,
-                'publicationData' => $publicationData
-            ])),
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => 123456789,
+            'publicationData' => $publicationData
         ]);
 
-        $mockResult = new TextPublicationData();
-        $mockResult->fromArray($publicationData);
-
-        $handlerStack = HandlerStack::create($mock);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $client = new PublicationApiClient($guzzleClient);
         $response = $client->get(123);
 
-        $this->assertEquals(ApiResponse::ResultSuccess, $response->result, 'Unexpected result: ' . ($response->message ?? ''));
+        $this->assertEquals(ApiResponse::ResultSuccess, $response->result);
         $this->assertEquals(123456789, $response->timeStamp);
         $this->assertInstanceOf(TextPublicationData::class, $response->publicationData);
     }
@@ -94,17 +98,10 @@ class PublicationApiClientTest extends TestCase
      */
     public function testListThrowsOnServerError(): void
     {
-        $mock = new MockHandler([
-            new Response(200, [], json_encode([
-                'result' => ApiResponse::ResultError,
-                'message' => 'Something went wrong'
-            ])),
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultError,
+            'message' => 'Something went wrong'
         ]);
-
-        $handlerStack = HandlerStack::create($mock);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $client = new PublicationApiClient($guzzleClient);
 
         $this->expectException(InvalidResponseFromServerException::class);
         $this->expectExceptionMessage('Something went wrong');
@@ -116,17 +113,10 @@ class PublicationApiClientTest extends TestCase
      */
     public function testListThrowsOnMissingPublications(): void
     {
-        $mock = new MockHandler([
-            new Response(200, [], json_encode([
-                'result' => ApiResponse::ResultSuccess,
-                'timeStamp' => 123456789
-            ])),
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => 123456789
         ]);
-
-        $handlerStack = HandlerStack::create($mock);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $client = new PublicationApiClient($guzzleClient);
 
         $this->expectException(InvalidResponseFromServerException::class);
         $this->expectExceptionMessage('no publication array');
@@ -136,16 +126,13 @@ class PublicationApiClientTest extends TestCase
     /**
      * @throws InvalidResponseFromServerException
      */
-    public function testListThrowsOnGuzzleException(): void
+    public function testListThrowsOnClientException(): void
     {
-        $mock = new MockHandler([
-            new ConnectException('Connection failed', new Request('GET', 'list'))
-        ]);
+        $exception = $this->createStub(ClientExceptionInterface::class);
+        // We use an anonymous class to implement the interface and extend Exception
+        $exception = new class('Connection failed') extends \Exception implements ClientExceptionInterface {};
 
-        $handlerStack = HandlerStack::create($mock);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $client = new PublicationApiClient($guzzleClient);
+        $client = $this->createClient(null, $exception);
 
         $this->expectException(HttpClientException::class);
         $this->expectExceptionMessage('Connection failed');
@@ -157,17 +144,10 @@ class PublicationApiClientTest extends TestCase
      */
     public function testGetThrowsOnMissingPublicationData(): void
     {
-        $mock = new MockHandler([
-            new Response(200, [], json_encode([
-                'result' => ApiResponse::ResultSuccess,
-                'timeStamp' => 123456789
-            ])),
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => 123456789
         ]);
-
-        $handlerStack = HandlerStack::create($mock);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $client = new PublicationApiClient($guzzleClient);
 
         $this->expectException(InvalidResponseFromServerException::class);
         $this->expectExceptionMessage('no publication type');
@@ -179,21 +159,14 @@ class PublicationApiClientTest extends TestCase
      */
     public function testGetThrowsOnInvalidPublicationType(): void
     {
-        $mock = new MockHandler([
-            new Response(200, [], json_encode([
-                'result' => ApiResponse::ResultSuccess,
-                'timeStamp' => 123456789,
-                'publicationData' => [
-                    'type' => 'unknown',
-                    'id' => 123
-                ]
-            ])),
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => 123456789,
+            'publicationData' => [
+                'type' => 'unknown',
+                'id' => 123
+            ]
         ]);
-
-        $handlerStack = HandlerStack::create($mock);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $client = new PublicationApiClient($guzzleClient);
 
         $this->expectException(InvalidResponseFromServerException::class);
         $this->expectExceptionMessage('Invalid publication type: unknown');

@@ -2,8 +2,9 @@
 
 namespace ThomasInstitut\ApmPublicationApi\Client;
 
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\Exception\GuzzleException;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use ThomasInstitut\ApmPublicationApi\PublicationApiGetResponse;
 use ThomasInstitut\ApmPublicationApi\PublicationApiListResponse;
 use ThomasInstitut\ApmPublicationApi\PublicationListing;
@@ -15,8 +16,11 @@ use ThomasInstitut\StandardApi\ApiResponse;
 
 readonly class PublicationApiClient
 {
-    public function __construct(private GuzzleClient $client)
-    {
+    public function __construct(
+        private ClientInterface $client,
+        private RequestFactoryInterface $requestFactory,
+        private string $baseUrl
+    ) {
     }
 
     /**
@@ -25,9 +29,10 @@ readonly class PublicationApiClient
      */
     public function list(): PublicationApiListResponse
     {
-        $url = 'list';
+        $url = rtrim($this->baseUrl, '/') . '/list';
         try {
-            $response = $this->client->get($url);
+            $request = $this->requestFactory->createRequest('GET', $url);
+            $response = $this->client->sendRequest($request);
             $data = json_decode($response->getBody()->getContents(), true);
 
             if ($data['result'] === ApiResponse::ResultError) {
@@ -46,7 +51,7 @@ readonly class PublicationApiClient
                 $apiResponse->publications[] = $pubObject;
             }
             return $apiResponse;
-        } catch (GuzzleException $e) {
+        } catch (ClientExceptionInterface $e) {
             throw new HttpClientException("Http client error: " . $e->getMessage(), $e->getCode(), $e);
         } catch (MissingRequiredValueException|WrongValueTypeException $e) {
             throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), $e->getCode(), $e);
@@ -59,9 +64,10 @@ readonly class PublicationApiClient
      */
     public function get(int $id): PublicationApiGetResponse
     {
-        $url =  "$id/get";
+        $url = rtrim($this->baseUrl, '/') . "/$id/get";
         try {
-            $response = $this->client->get($url);
+            $request = $this->requestFactory->createRequest('GET', $url);
+            $response = $this->client->sendRequest($request);
             $data = json_decode($response->getBody()->getContents(), true);
 
             $apiResponse = new PublicationApiGetResponse();
@@ -80,8 +86,8 @@ readonly class PublicationApiClient
                     throw new InvalidResponseFromServerException("Invalid publication type: {$data['publicationData']['type']}");
             }
             return $apiResponse;
-        } catch (GuzzleException $e) {
-            throw new HttpClientException("Guzzle error: " . $e->getMessage(), $e->getCode(), $e);
+        } catch (ClientExceptionInterface $e) {
+            throw new HttpClientException("Http client error: " . $e->getMessage(), $e->getCode(), $e);
         } catch (MissingRequiredValueException|WrongValueTypeException $e) {
             throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), $e->getCode(), $e);
         }
