@@ -9,11 +9,6 @@
       "email": "rafael.najera@uni-koeln.de"
     }
   ],
-  "config": {
-    "platform": {
-      "php": "8.3"
-    }
-  },
   "scripts" : {
     "test": "./vendor/bin/phpunit --display-all-issues",
     "phpstan": "./vendor/bin/phpstan analyse",
