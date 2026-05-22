@@ -364,4 +364,99 @@ class PublicationApiClientTest extends TestCase
         $this->expectExceptionMessage('no timestamp');
         $client->get(123);
     }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testListThrowsOnPublicationNotAnArray(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => time(),
+            'publications' => [
+                'not an array'
+            ]
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('publication is not an array');
+        $client->list();
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testListThrowsOnHydrationError(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => time(),
+            'publications' => [
+                ['id' => 'not an int'] // This should trigger WrongValueTypeException in fromArray
+            ]
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('Server response is invalid');
+        $client->list();
+    }
+
+    /**
+     * @throws InvalidResponseFromServerException
+     */
+    public function testGetThrowsOnClientException(): void
+    {
+        $exception = new class('Connection failed') extends Exception implements ClientExceptionInterface {};
+        $client = $this->createClient(null, $exception);
+
+        $this->expectException(HttpClientException::class);
+        $this->expectExceptionMessage('Connection failed');
+        $client->get(123);
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testGetThrowsOnHydrationError(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => time(),
+            'publicationData' => [
+                'type' => PublicationType::Text,
+                'id' => 'not an int' // This should trigger WrongValueTypeException
+            ]
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('Server response is invalid');
+        $client->get(123);
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testThrowsOnJsonNotArray(): void
+    {
+        $client = $this->createClient('"just a string"');
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('expected JSON object or array');
+        $client->list();
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testThrowsOnNonStringKeys(): void
+    {
+        // JSON cannot have non-string keys, but json_decode with true might produce them in some edge cases?
+        // Actually, parseAndValidateResponse uses json_decode which always returns string keys for objects.
+        // But if we pass a JSON that is just an array of values, it has numeric keys.
+        $client = $this->createClient('[1, 2, 3]');
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('expected JSON object with string keys');
+        $client->list();
+    }
 }
