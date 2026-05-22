@@ -14,11 +14,13 @@ use ThomasInstitut\ApmPublicationApi\PublicationListing;
 use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
 use ThomasInstitut\StandardApi\ApiResponse;
+use ThomasInstitut\StandardApi\ApiResult;
 
 class PublicationApiClientTest extends TestCase
 {
     private function createClient(mixed $responseData = null, ?Exception $exception = null): PublicationApiClient
     {
+        class_exists(ApiResponse::class);
         $client = $this->createStub(ClientInterface::class);
         $requestFactory = $this->createStub(RequestFactoryInterface::class);
         $request = $this->createStub(RequestInterface::class);
@@ -45,6 +47,7 @@ class PublicationApiClientTest extends TestCase
      */
     public function testListUrl(): void
     {
+        class_exists(ApiResponse::class);
         $client = $this->createStub(ClientInterface::class);
         $requestFactory = $this->getMockBuilder(RequestFactoryInterface::class)->getMock();
         $request = $this->createStub(RequestInterface::class);
@@ -52,7 +55,7 @@ class PublicationApiClientTest extends TestCase
         $stream = $this->createStub(StreamInterface::class);
 
         $stream->method('getContents')->willReturn(json_encode([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => time(),
             'publications' => []
         ]));
@@ -74,6 +77,7 @@ class PublicationApiClientTest extends TestCase
      */
     public function testGetUrl(): void
     {
+        class_exists(ApiResponse::class);
         $client = $this->createStub(ClientInterface::class);
         $requestFactory = $this->getMockBuilder(RequestFactoryInterface::class)->getMock();
         $request = $this->createStub(RequestInterface::class);
@@ -81,7 +85,7 @@ class PublicationApiClientTest extends TestCase
         $stream = $this->createStub(StreamInterface::class);
 
         $stream->method('getContents')->willReturn(json_encode([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => time(),
             'publicationData' => [
                 'type' => PublicationType::Text,
@@ -111,7 +115,7 @@ class PublicationApiClientTest extends TestCase
     public function testList(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => 123456789,
             'publications' => [
                 ['type' => 'test', 'id' => 1, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Test Publication', 'description' => 'This is a test publication'],
@@ -122,7 +126,7 @@ class PublicationApiClientTest extends TestCase
 
         $response = $client->list();
 
-        $this->assertEquals(ApiResponse::ResultSuccess, $response->result);
+        $this->assertEquals(ApiResult::Success, $response->result);
         $this->assertEquals(123456789, $response->timeStamp);
         foreach ($response->publications as $publication) {
             $this->assertInstanceOf(PublicationListing::class, $publication);
@@ -145,14 +149,14 @@ class PublicationApiClientTest extends TestCase
         ];
 
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => 123456789,
             'publicationData' => $publicationData
         ]);
 
         $response = $client->get(123);
 
-        $this->assertEquals(ApiResponse::ResultSuccess, $response->result);
+        $this->assertEquals(ApiResult::Success, $response->result);
         $this->assertEquals(123456789, $response->timeStamp);
         $this->assertInstanceOf(TextPublicationData::class, $response->publicationData);
     }
@@ -163,7 +167,7 @@ class PublicationApiClientTest extends TestCase
     public function testListThrowsOnServerError(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultError,
+            'result' => ApiResult::Error->value,
             'message' => 'Something went wrong'
         ]);
 
@@ -178,7 +182,7 @@ class PublicationApiClientTest extends TestCase
     public function testListThrowsOnMissingPublications(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => 123456789
         ]);
 
@@ -208,7 +212,7 @@ class PublicationApiClientTest extends TestCase
     public function testGetThrowsOnMissingPublicationData(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => 123456789
         ]);
 
@@ -223,7 +227,7 @@ class PublicationApiClientTest extends TestCase
     public function testGetThrowsOnInvalidPublicationType(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => 123456789,
             'publicationData' => [
                 'type' => 'unknown',
@@ -266,7 +270,7 @@ class PublicationApiClientTest extends TestCase
     public function testGetThrowsOnServerError(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultError,
+            'result' => ApiResult::Error->value,
             'message' => 'Something went wrong on get'
         ]);
 
@@ -281,7 +285,7 @@ class PublicationApiClientTest extends TestCase
     public function testListThrowsOnInvalidPublicationsType(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => time(),
             'publications' => 'not an array'
         ]);
@@ -312,7 +316,7 @@ class PublicationApiClientTest extends TestCase
     public function testListThrowsOnMissingTimestamp(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'publications' => []
         ]);
 
@@ -349,7 +353,7 @@ class PublicationApiClientTest extends TestCase
     public function testGetThrowsOnMissingTimestamp(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'publicationData' => [
                 'type' => PublicationType::Text,
                 'id' => 123,
@@ -371,7 +375,7 @@ class PublicationApiClientTest extends TestCase
     public function testListThrowsOnPublicationNotAnArray(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => time(),
             'publications' => [
                 'not an array'
@@ -379,7 +383,7 @@ class PublicationApiClientTest extends TestCase
         ]);
 
         $this->expectException(InvalidResponseFromServerException::class);
-        $this->expectExceptionMessage('publication is not an array');
+        $this->expectExceptionMessage('Server response is invalid');
         $client->list();
     }
 
@@ -389,7 +393,7 @@ class PublicationApiClientTest extends TestCase
     public function testListThrowsOnHydrationError(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => time(),
             'publications' => [
                 ['id' => 'not an int'] // This should trigger WrongValueTypeException in fromArray
@@ -420,7 +424,7 @@ class PublicationApiClientTest extends TestCase
     public function testGetThrowsOnHydrationError(): void
     {
         $client = $this->createClient([
-            'result' => ApiResponse::ResultSuccess,
+            'result' => ApiResult::Success->value,
             'timeStamp' => time(),
             'publicationData' => [
                 'type' => PublicationType::Text,

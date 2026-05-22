@@ -2,6 +2,9 @@
 
 namespace ThomasInstitut\ApmPublicationApi\Client;
 
+use CuyZ\Valinor\Mapper\MappingError;
+use CuyZ\Valinor\Mapper\TreeMapper;
+use CuyZ\Valinor\MapperBuilder;
 use JsonException;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
@@ -11,18 +14,21 @@ use ThomasInstitut\ApmPublicationApi\PublicationApiListResponse;
 use ThomasInstitut\ApmPublicationApi\PublicationListing;
 use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
-use ThomasInstitut\Settable\MissingRequiredValueException;
-use ThomasInstitut\Settable\WrongValueTypeException;
 use ThomasInstitut\StandardApi\ApiResponse;
+use ThomasInstitut\StandardApi\ApiResult;
 
 readonly class PublicationApiClient
 {
+    private TreeMapper $mapper;
+
     public function __construct(
         private ClientInterface         $client,
         private RequestFactoryInterface $requestFactory,
         private string                  $baseUrl
     )
     {
+        class_exists(ApiResponse::class);
+        $this->mapper = (new MapperBuilder())->mapper();
     }
 
     /**
@@ -40,23 +46,24 @@ readonly class PublicationApiClient
             $apiResponse = new PublicationApiListResponse();
             $this->hydrateBaseResponse($apiResponse, $data);
 
-            $apiResponse->publications = [];
             if (!isset($data['publications']) || !is_array($data['publications'])) {
                 throw new InvalidResponseFromServerException("Invalid response from server: no publication array");
             }
-            foreach ($data['publications'] as $publication) {
-                if (!is_array($publication)) {
-                    throw new InvalidResponseFromServerException("Invalid response from server: publication is not an array");
-                }
-                $pubObject = new PublicationListing();
-                $pubObject->fromArray($publication);
-                $apiResponse->publications[] = $pubObject;
+
+            try {
+                /** @var array<PublicationListing> $publications */
+                $publications = $this->mapper->map(
+                    'array<' . PublicationListing::class . '>',
+                    $data['publications']
+                );
+                $apiResponse->publications = $publications;
+            } catch (MappingError $e) {
+                throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), 0, $e);
             }
+
             return $apiResponse;
         } catch (ClientExceptionInterface $e) {
             throw new HttpClientException("Http client error: " . $e->getMessage(), $e->getCode(), $e);
-        } catch (MissingRequiredValueException|WrongValueTypeException $e) {
-            throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -79,22 +86,21 @@ readonly class PublicationApiClient
                 throw new InvalidResponseFromServerException("Invalid response from server: no publication type");
             }
             $type = is_scalar($data['publicationData']['type']) ? (string)$data['publicationData']['type'] : '';
-            switch ($type) {
-                case PublicationType::Text:
-                    $apiResponse->publicationData = new TextPublicationData();
-                    /** @var array<string, mixed> $publicationData */
-                    $publicationData = $data['publicationData'];
-                    $apiResponse->publicationData->fromArray($publicationData);
-                    break;
 
-                default:
-                    throw new InvalidResponseFromServerException("Invalid publication type: $type");
+            try {
+                $apiResponse->publicationData = match ($type) {
+                    PublicationType::Text => $this->mapper->map(
+                        TextPublicationData::class,
+                        $data['publicationData']
+                    ),
+                    default => throw new InvalidResponseFromServerException("Invalid publication type: $type"),
+                };
+            } catch (MappingError $e) {
+                throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), 0, $e);
             }
             return $apiResponse;
         } catch (ClientExceptionInterface $e) {
             throw new HttpClientException("Http client error: " . $e->getMessage(), $e->getCode(), $e);
-        } catch (MissingRequiredValueException|WrongValueTypeException $e) {
-            throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -116,7 +122,7 @@ readonly class PublicationApiClient
             throw new InvalidResponseFromServerException("Invalid response from server: expected JSON object with string keys");
         }
         /** @var array<string, mixed> $data */  // this is guaranteed by the previous check
-        if (($data['result'] ?? ApiResponse::ResultUndefined) === ApiResponse::ResultError) {
+        if (($data['result'] ?? ApiResult::Undefined->value) === ApiResult::Error->value) {
             $message = is_scalar($data['message'] ?? null) ? (string)$data['message'] : 'Unknown server error';
             throw new InvalidResponseFromServerException($message);
         }
@@ -131,8 +137,8 @@ readonly class PublicationApiClient
      */
     private function hydrateBaseResponse(PublicationApiListResponse|PublicationApiGetResponse $apiResponse, array $data): void
     {
-        $apiResponse->result = is_scalar($data['result'] ?? null) ? (string)$data['result'] : ApiResponse::ResultUndefined;
-        if ($apiResponse->result === ApiResponse::ResultUndefined) {
+        $apiResponse->result = isset($data['result']) && is_string($data['result']) ? ApiResult::from($data['result']) : ApiResult::Undefined;
+        if ($apiResponse->result === ApiResult::Undefined) {
             throw new InvalidResponseFromServerException("Invalid response from server: no result");
         }
         $apiResponse->timeStamp = is_numeric($data['timeStamp'] ?? null) ? (int)$data['timeStamp'] : -1;

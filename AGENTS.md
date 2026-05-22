@@ -11,7 +11,8 @@ The package is still early-stage / alpha. Prefer small, conservative changes tha
 - PHPUnit 12 for tests
 - PHPStan 2 (level 4)
 - PSR-18 for HTTP client, PSR-17 for factories
-- `thomas-institut/php-backend-common` for `StandardApi` response types and `Settable` array hydration helpers
+- `thomas-institut/standard-api` for `StandardApi` response types
+- `cuyz/valinor` for array hydration
 
 ## Repository layout
 - `src/ThomasInstitut/ApmPublicationApi/`
@@ -47,9 +48,9 @@ The client expects two endpoints relative to a configured `baseUrl` (injected in
   - throws `ThomasInstitut\ApmPublicationApi\Client\InvalidResponseFromServerException` on unsupported/invalid cases or server-declared errors
 
 ### Hydration model
-- `PublicationListing` uses `FromFlatArrayTrait` from the shared dependency.
-- `PublicationData` extends `PublicationListing`.
-- `TextPublicationData` overrides `fromArray()` to populate `text` after the shared fields.
+- Objects are hydrated using `cuyz/valinor`.
+- `PublicationApiClient` uses a `TreeMapper` instance to map API response arrays to DTOs.
+- `PublicationListing` and its subclasses are simple DTOs with public properties.
 - `TranscriptionData`, `TranscriptionPage`, and `TranscriptionColumn` currently exist as structure definitions only; they are not yet hydrated by the client.
 
 ## Important implementation notes

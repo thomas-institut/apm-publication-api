@@ -2,13 +2,8 @@
 
 namespace ThomasInstitut\ApmPublicationApi;
 
-use ThomasInstitut\Settable\FromFlatArrayTrait;
-use ThomasInstitut\Settable\SettableFromArray;
-
-class PublicationListing implements SettableFromArray
+class PublicationListing
 {
-
-    use FromFlatArrayTrait;
 
     /**
      * A string identifying the publication's type: 'transcription', 'edition', etc.
