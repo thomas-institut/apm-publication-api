@@ -2,9 +2,9 @@
 
 namespace ThomasInstitut\ApmPublicationApi;
 
-use ThomasInstitut\StandardApi\ApiResponse;
+use ThomasInstitut\StandardApi\SuccessResponse;
 
-class PublicationApiGetResponse extends ApiResponse
+class PublicationApiGetResponse extends SuccessResponse
 {
     public PublicationData $publicationData;
 }

@@ -3,9 +3,9 @@
 namespace ThomasInstitut\ApmPublicationApi;
 
 
-use ThomasInstitut\StandardApi\ApiResponse;
+use ThomasInstitut\StandardApi\SuccessResponse;
 
-class PublicationApiListResponse extends ApiResponse
+class PublicationApiListResponse extends SuccessResponse
 {
     /**
      * @var PublicationListing[]
