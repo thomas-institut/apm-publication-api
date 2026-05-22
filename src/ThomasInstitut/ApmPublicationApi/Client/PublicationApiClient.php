@@ -2,6 +2,7 @@
 
 namespace ThomasInstitut\ApmPublicationApi\Client;
 
+use JsonException;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -17,10 +18,11 @@ use ThomasInstitut\StandardApi\ApiResponse;
 readonly class PublicationApiClient
 {
     public function __construct(
-        private ClientInterface $client,
+        private ClientInterface         $client,
         private RequestFactoryInterface $requestFactory,
-        private string $baseUrl
-    ) {
+        private string                  $baseUrl
+    )
+    {
     }
 
     /**
@@ -42,7 +44,7 @@ readonly class PublicationApiClient
             if (!isset($data['publications']) || !is_array($data['publications'])) {
                 throw new InvalidResponseFromServerException("Invalid response from server: no publication array");
             }
-            foreach( $data['publications'] as $publication) {
+            foreach ($data['publications'] as $publication) {
                 if (!is_array($publication)) {
                     throw new InvalidResponseFromServerException("Invalid response from server: publication is not an array");
                 }
@@ -104,14 +106,16 @@ readonly class PublicationApiClient
     {
         try {
             $data = json_decode($jsonBody, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
+        } catch (JsonException $e) {
             throw new InvalidResponseFromServerException("Invalid JSON response from server: " . $e->getMessage(), $e->getCode(), $e);
         }
-
         if (!is_array($data)) {
             throw new InvalidResponseFromServerException("Invalid response from server: expected JSON object or array");
         }
-
+        if (!$this->onlyHasStringKeys($data)) {
+            throw new InvalidResponseFromServerException("Invalid response from server: expected JSON object with string keys");
+        }
+        /** @var array<string, mixed> $data */  // this is guaranteed by the previous check
         if (($data['result'] ?? ApiResponse::ResultUndefined) === ApiResponse::ResultError) {
             $message = is_scalar($data['message'] ?? null) ? (string)$data['message'] : 'Unknown server error';
             throw new InvalidResponseFromServerException($message);
@@ -135,5 +139,19 @@ readonly class PublicationApiClient
         if ($apiResponse->timeStamp === -1) {
             throw new InvalidResponseFromServerException("Invalid response from server: no timestamp");
         }
+    }
+
+    /**
+     * @param array<int|string, mixed> $array
+     * @return bool
+     */
+    private function onlyHasStringKeys(array $array): bool
+    {
+        foreach (array_keys($array) as $key) {
+            if (!is_string($key)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
