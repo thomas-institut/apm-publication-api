@@ -91,6 +91,7 @@ readonly class PublicationApiClient
     }
 
     /**
+     * @return array<string, mixed>
      * @throws InvalidResponseFromServerException
      */
     private function parseAndValidateResponse(string $jsonBody): array
