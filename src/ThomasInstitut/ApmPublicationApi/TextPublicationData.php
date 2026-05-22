@@ -14,6 +14,7 @@ class TextPublicationData extends PublicationData
      * @throws MissingRequiredValueException
      * @throws WrongValueTypeException
      */
+    #[\Override]
     public function fromArray(array $config): void
     {
         parent::fromArray($config);
