@@ -26,20 +26,20 @@ The package is still early-stage / alpha. Prefer small, conservative changes tha
 
 ## Current architecture
 ### API shape
-The client expects two endpoints relative to a configured `baseUrl` (injected in constructor):
-- `/list`
-- `/{id}/get`
+The client expects two endpoints relative to a configured `baseUrl` (injected in constructor). The client automatically appends `/publication`:
+- `/publication/list`
+- `/publication/{id}/get`
 
 ### Main flow
 - `PublicationApiClient::list()`
-  - calls `GET list`
+  - calls `GET publication/list`
   - decodes JSON
   - throws `ThomasInstitut\ApmPublicationApi\Client\HttpClientException` on transport errors
   - throws `ThomasInstitut\ApmPublicationApi\Client\InvalidResponseFromServerException` on server-declared errors or invalid payloads
   - otherwise hydrates a `PublicationApiListResponse` containing `PublicationListing[]`
 
 - `PublicationApiClient::get(int $id)`
-  - calls `GET {id}/get`
+  - calls `GET publication/{id}/get`
   - decodes JSON
   - validates `publicationData.type`
   - currently hydrates only `TextPublicationData`

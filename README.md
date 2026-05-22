@@ -43,3 +43,55 @@ abbreviations, additions, etc.
 
 *TBD*
 
+## Api Client
+
+The `PublicationApiClient` requires a PSR-18 HTTP Client and a PSR-17 Request Factory. Below is an example of how to use it with [Guzzle](https://github.com/guzzle/guzzle).
+
+### Installation
+
+If you don't have an HTTP client yet, you can install Guzzle:
+
+```bash
+composer require guzzlehttp/guzzle
+```
+
+### Usage Example
+
+```php
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\HttpFactory;
+use ThomasInstitut\ApmPublicationApi\Client\PublicationApiClient;
+
+// 1. Create the PSR-18 HTTP Client (Guzzle 7+ implements this)
+$httpClient = new Client();
+
+// 2. Create the PSR-17 Request Factory (Guzzle PSR-7 provides this)
+$requestFactory = new HttpFactory();
+
+// 3. Define the base URL of the APM API (without /publication)
+$baseUrl = 'https://apm.example.com/api';
+
+// 4. Initialize the PublicationApiClient
+$apiClient = new PublicationApiClient(
+    $httpClient,
+    $requestFactory,
+    $baseUrl
+);
+
+// Example usage:
+try {
+    $listResponse = $apiClient->list();
+    foreach ($listResponse->publications as $listing) {
+        echo $listing->title . PHP_EOL;
+    }
+} catch (\ThomasInstitut\ApmPublicationApi\Client\PublicationApiClientException $e) {
+    // Handle transport or server errors
+}
+```
+
+### Key Components
+- **`GuzzleHttp\Client`**: Implements `Psr\Http\Client\ClientInterface`.
+- **`GuzzleHttp\Psr7\HttpFactory`**: Implements `Psr\Http\Message\RequestFactoryInterface`.
+- **`baseUrl`**: The base URL for the APM API (e.g., `https://example.com/api`). The client automatically appends `/publication/list` or `/publication/{id}/get` to this URL.
+
+

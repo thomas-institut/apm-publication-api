@@ -29,7 +29,7 @@ readonly class PublicationApiClient
      */
     public function list(): PublicationApiListResponse
     {
-        $url = rtrim($this->baseUrl, '/') . '/list';
+        $url = rtrim($this->baseUrl, '/') . '/publication/list';
         try {
             $request = $this->requestFactory->createRequest('GET', $url);
             $response = $this->client->sendRequest($request);
@@ -64,7 +64,7 @@ readonly class PublicationApiClient
      */
     public function get(int $id): PublicationApiGetResponse
     {
-        $url = rtrim($this->baseUrl, '/') . "/$id/get";
+        $url = rtrim($this->baseUrl, '/') . "/publication/$id/get";
         try {
             $request = $this->requestFactory->createRequest('GET', $url);
             $response = $this->client->sendRequest($request);

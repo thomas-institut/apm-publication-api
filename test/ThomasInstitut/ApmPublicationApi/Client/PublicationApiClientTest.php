@@ -2,7 +2,7 @@
 
 namespace ThomasInstitut\ApmPublicationApi\Client;
 
-use PHPUnit\Framework\MockObject\MockObject;
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
@@ -13,13 +13,11 @@ use Psr\Http\Message\StreamInterface;
 use ThomasInstitut\ApmPublicationApi\PublicationListing;
 use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
-use ThomasInstitut\Settable\MissingRequiredValueException;
-use ThomasInstitut\Settable\WrongValueTypeException;
 use ThomasInstitut\StandardApi\ApiResponse;
 
 class PublicationApiClientTest extends TestCase
 {
-    private function createClient(mixed $responseData = null, ?\Exception $exception = null): PublicationApiClient
+    private function createClient(mixed $responseData = null, ?Exception $exception = null): PublicationApiClient
     {
         $client = $this->createStub(ClientInterface::class);
         $requestFactory = $this->createStub(RequestFactoryInterface::class);
@@ -37,7 +35,70 @@ class PublicationApiClientTest extends TestCase
             $client->method('sendRequest')->willReturn($response);
         }
 
-        return new PublicationApiClient($client, $requestFactory, 'http://api.example.com');
+        return new PublicationApiClient($client, $requestFactory, 'https://api.example.com/api');
+    }
+
+    /**
+     * @throws InvalidResponseFromServerException
+     * @throws HttpClientException
+     */
+    public function testListUrl(): void
+    {
+        $client = $this->createStub(ClientInterface::class);
+        $requestFactory = $this->getMockBuilder(RequestFactoryInterface::class)->getMock();
+        $request = $this->createStub(RequestInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
+        $stream = $this->createStub(StreamInterface::class);
+
+        $stream->method('getContents')->willReturn(json_encode([
+            'result' => ApiResponse::ResultSuccess,
+            'publications' => []
+        ]));
+        $response->method('getBody')->willReturn($stream);
+        $client->method('sendRequest')->willReturn($response);
+
+        $requestFactory->expects($this->once())
+            ->method('createRequest')
+            ->with('GET', 'https://api.example.com/api/publication/list')
+            ->willReturn($request);
+
+        $apiClient = new PublicationApiClient($client, $requestFactory, 'https://api.example.com/api');
+        $apiClient->list();
+    }
+
+    /**
+     * @throws InvalidResponseFromServerException
+     * @throws HttpClientException
+     */
+    public function testGetUrl(): void
+    {
+        $client = $this->createStub(ClientInterface::class);
+        $requestFactory = $this->getMockBuilder(RequestFactoryInterface::class)->getMock();
+        $request = $this->createStub(RequestInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
+        $stream = $this->createStub(StreamInterface::class);
+
+        $stream->method('getContents')->willReturn(json_encode([
+            'result' => ApiResponse::ResultSuccess,
+            'publicationData' => [
+                'type' => PublicationType::Text,
+                'id' => 123,
+                'versionTimeString' => '2026-01-20 15:23:20.123456',
+                'title' => 'Test Publication',
+                'description' => 'This is a test publication',
+                'text' => 'This is the text of the publication.'
+            ]
+        ]));
+        $response->method('getBody')->willReturn($stream);
+        $client->method('sendRequest')->willReturn($response);
+
+        $requestFactory->expects($this->once())
+            ->method('createRequest')
+            ->with('GET', 'https://api.example.com/api/publication/123/get')
+            ->willReturn($request);
+
+        $apiClient = new PublicationApiClient($client, $requestFactory, 'https://api.example.com/api');
+        $apiClient->get(123);
     }
 
     /**
@@ -128,9 +189,8 @@ class PublicationApiClientTest extends TestCase
      */
     public function testListThrowsOnClientException(): void
     {
-        $exception = $this->createStub(ClientExceptionInterface::class);
         // We use an anonymous class to implement the interface and extend Exception
-        $exception = new class('Connection failed') extends \Exception implements ClientExceptionInterface {};
+        $exception = new class('Connection failed') extends Exception implements ClientExceptionInterface {};
 
         $client = $this->createClient(null, $exception);
 
