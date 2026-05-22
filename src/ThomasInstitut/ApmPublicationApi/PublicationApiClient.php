@@ -68,7 +68,7 @@ readonly class PublicationApiClient
                     break;
 
                 default:
-                    return new ErrorResponse("Invalid publication type: {$data['type']}");
+                    return new ErrorResponse("Invalid publication type: {$data['publicationData']['type']}");
             }
             return $apiResponse;
         } catch (GuzzleException $e) {
