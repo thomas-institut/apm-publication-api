@@ -36,13 +36,16 @@ readonly class PublicationApiClient
             $data = $this->parseAndValidateResponse($response->getBody()->getContents());
 
             $apiResponse = new PublicationApiListResponse();
-            $apiResponse->result = $data['result'] ?? ApiResponse::ResultUndefined;
-            $apiResponse->timeStamp = $data['timeStamp'] ?? -1;
+            $this->hydrateBaseResponse($apiResponse, $data);
+
             $apiResponse->publications = [];
             if (!isset($data['publications']) || !is_array($data['publications'])) {
                 throw new InvalidResponseFromServerException("Invalid response from server: no publication array");
             }
             foreach( $data['publications'] as $publication) {
+                if (!is_array($publication)) {
+                    throw new InvalidResponseFromServerException("Invalid response from server: publication is not an array");
+                }
                 $pubObject = new PublicationListing();
                 $pubObject->fromArray($publication);
                 $apiResponse->publications[] = $pubObject;
@@ -68,19 +71,22 @@ readonly class PublicationApiClient
             $data = $this->parseAndValidateResponse($response->getBody()->getContents());
 
             $apiResponse = new PublicationApiGetResponse();
-            $apiResponse->result = $data['result'] ?? ApiResponse::ResultUndefined;
-            $apiResponse->timeStamp = $data['timeStamp'] ?? -1;
+            $this->hydrateBaseResponse($apiResponse, $data);
+
             if (!isset($data['publicationData']) || !is_array($data['publicationData']) || !isset($data['publicationData']['type'])) {
                 throw new InvalidResponseFromServerException("Invalid response from server: no publication type");
             }
-            switch ($data['publicationData']['type']) {
+            $type = is_scalar($data['publicationData']['type']) ? (string)$data['publicationData']['type'] : '';
+            switch ($type) {
                 case PublicationType::Text:
                     $apiResponse->publicationData = new TextPublicationData();
-                    $apiResponse->publicationData->fromArray($data['publicationData']);
+                    /** @var array<string, mixed> $publicationData */
+                    $publicationData = $data['publicationData'];
+                    $apiResponse->publicationData->fromArray($publicationData);
                     break;
 
                 default:
-                    throw new InvalidResponseFromServerException("Invalid publication type: {$data['publicationData']['type']}");
+                    throw new InvalidResponseFromServerException("Invalid publication type: $type");
             }
             return $apiResponse;
         } catch (ClientExceptionInterface $e) {
@@ -107,9 +113,27 @@ readonly class PublicationApiClient
         }
 
         if (($data['result'] ?? ApiResponse::ResultUndefined) === ApiResponse::ResultError) {
-            throw new InvalidResponseFromServerException($data['message'] ?? 'Unknown server error');
+            $message = is_scalar($data['message'] ?? null) ? (string)$data['message'] : 'Unknown server error';
+            throw new InvalidResponseFromServerException($message);
         }
 
         return $data;
+    }
+
+    /**
+     * @param PublicationApiListResponse|PublicationApiGetResponse $apiResponse
+     * @param array<string, mixed> $data
+     * @throws InvalidResponseFromServerException
+     */
+    private function hydrateBaseResponse(PublicationApiListResponse|PublicationApiGetResponse $apiResponse, array $data): void
+    {
+        $apiResponse->result = is_scalar($data['result'] ?? null) ? (string)$data['result'] : ApiResponse::ResultUndefined;
+        if ($apiResponse->result === ApiResponse::ResultUndefined) {
+            throw new InvalidResponseFromServerException("Invalid response from server: no result");
+        }
+        $apiResponse->timeStamp = is_numeric($data['timeStamp'] ?? null) ? (int)$data['timeStamp'] : -1;
+        if ($apiResponse->timeStamp === -1) {
+            throw new InvalidResponseFromServerException("Invalid response from server: no timestamp");
+        }
     }
 }

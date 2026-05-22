@@ -53,6 +53,7 @@ class PublicationApiClientTest extends TestCase
 
         $stream->method('getContents')->willReturn(json_encode([
             'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => time(),
             'publications' => []
         ]));
         $response->method('getBody')->willReturn($stream);
@@ -81,6 +82,7 @@ class PublicationApiClientTest extends TestCase
 
         $stream->method('getContents')->willReturn(json_encode([
             'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => time(),
             'publicationData' => [
                 'type' => PublicationType::Text,
                 'id' => 123,
@@ -280,11 +282,86 @@ class PublicationApiClientTest extends TestCase
     {
         $client = $this->createClient([
             'result' => ApiResponse::ResultSuccess,
+            'timeStamp' => time(),
             'publications' => 'not an array'
         ]);
 
         $this->expectException(InvalidResponseFromServerException::class);
         $this->expectExceptionMessage('no publication array');
         $client->list();
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testListThrowsOnMissingResult(): void
+    {
+        $client = $this->createClient([
+            'timeStamp' => 123456789,
+            'publications' => []
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('no result');
+        $client->list();
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testListThrowsOnMissingTimestamp(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'publications' => []
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('no timestamp');
+        $client->list();
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testGetThrowsOnMissingResult(): void
+    {
+        $client = $this->createClient([
+            'timeStamp' => 123456789,
+            'publicationData' => [
+                'type' => PublicationType::Text,
+                'id' => 123,
+                'versionTimeString' => '2026-01-20 15:23:20.123456',
+                'title' => 'Test',
+                'description' => 'Test',
+                'text' => 'Test'
+            ]
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('no result');
+        $client->get(123);
+    }
+
+    /**
+     * @throws HttpClientException
+     */
+    public function testGetThrowsOnMissingTimestamp(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResponse::ResultSuccess,
+            'publicationData' => [
+                'type' => PublicationType::Text,
+                'id' => 123,
+                'versionTimeString' => '2026-01-20 15:23:20.123456',
+                'title' => 'Test',
+                'description' => 'Test',
+                'text' => 'Test'
+            ]
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('no timestamp');
+        $client->get(123);
     }
 }

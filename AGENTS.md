@@ -94,3 +94,12 @@ Add or update tests when modifying:
   - `PublicationApiClient::get()` dispatch/hydration
   - tests
 - If improving validation, keep returned error behavior consistent with existing `ErrorResponse` usage.
+
+
+## Running PHP and Composer
+
+If running `php` or `composer` directly do not work, add `/usr/local/bin` to the PATH:
+
+```bash
+export PATH="/usr/local/bin:$PATH"
+```

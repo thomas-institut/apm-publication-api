@@ -17,6 +17,6 @@ class TextPublicationData extends PublicationData
     public function fromArray(array $config): void
     {
         parent::fromArray($config);
-        $this->text = $config['text'] ?? '';
+        $this->text = is_scalar($config['text'] ?? null) ? (string)$config['text'] : '';
     }
 }
