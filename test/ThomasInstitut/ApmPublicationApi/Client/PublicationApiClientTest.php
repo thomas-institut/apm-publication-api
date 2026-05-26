@@ -13,6 +13,7 @@ use Psr\Http\Message\StreamInterface;
 use ThomasInstitut\ApmPublicationApi\PublicationListing;
 use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
+use ThomasInstitut\ApmPublicationApi\TranscriptionData;
 use ThomasInstitut\StandardApi\ApiResponse;
 use ThomasInstitut\StandardApi\ApiResult;
 
@@ -162,6 +163,57 @@ class PublicationApiClientTest extends TestCase
         $this->assertEquals(ApiResult::Success, $response->result);
         $this->assertEquals(123456789, $response->timeStamp);
         $this->assertInstanceOf(TextPublicationData::class, $response->publicationData);
+    }
+
+    /**
+     * @throws HttpClientException
+     * @throws InvalidResponseFromServerException
+     */
+    public function testGetTranscription(): void
+    {
+        $publicationData = [
+            'type' => PublicationType::Transcription,
+            'id' => 456,
+            'versionTimeString' => '2026-01-20 15:23:20.123456',
+            'title' => 'Test Transcription',
+            'description' => 'This is a test transcription',
+            'documentName' => 'Doc 1',
+            'docType' => 'Type A',
+            'languageCode' => 'de',
+            'pages' => [
+                [
+                    'foliation' => '1r',
+                    'pageNumber' => 1,
+                    'imageUrl' => 'http://example.com/image1.jpg',
+                    'thumbnailUrl' => 'http://example.com/thumb1.jpg',
+                    'isTextPage' => true,
+                    'columns' => [
+                        [
+                            'transcriptionText' => 'Some text in col 1'
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $client = $this->createClient([
+            'result' => ApiResult::Success->value,
+            'timeStamp' => 123456789,
+            'publicationData' => $publicationData
+        ]);
+
+        $response = $client->get(456);
+
+        $this->assertEquals(ApiResult::Success, $response->result);
+        $this->assertEquals(123456789, $response->timeStamp);
+        $this->assertInstanceOf(TranscriptionData::class, $response->publicationData);
+        /** @var TranscriptionData $data */
+        $data = $response->publicationData;
+        $this->assertEquals('Doc 1', $data->documentName);
+        $this->assertCount(1, $data->pages);
+        $this->assertEquals('1r', $data->pages[0]->foliation);
+        $this->assertCount(1, $data->pages[0]->columns);
+        $this->assertEquals('Some text in col 1', $data->pages[0]->columns[0]->transcriptionText);
     }
 
     /**

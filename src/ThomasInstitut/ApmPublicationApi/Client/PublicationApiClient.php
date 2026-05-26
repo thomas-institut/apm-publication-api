@@ -16,6 +16,7 @@ use ThomasInstitut\ApmPublicationApi\PublicationApiListResponse;
 use ThomasInstitut\ApmPublicationApi\PublicationListing;
 use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
+use ThomasInstitut\ApmPublicationApi\TranscriptionData;
 use ThomasInstitut\StandardApi\ApiResponse;
 use ThomasInstitut\StandardApi\ApiResult;
 
@@ -110,6 +111,10 @@ readonly class PublicationApiClient
                 $apiResponse->publicationData = match ($type) {
                     PublicationType::Text => $this->mapper->map(
                         TextPublicationData::class,
+                        $data['publicationData']
+                    ),
+                    PublicationType::Transcription => $this->mapper->map(
+                        TranscriptionData::class,
                         $data['publicationData']
                     ),
                     default => throw new InvalidResponseFromServerException("Invalid publication type: $type"),
