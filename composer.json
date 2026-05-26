@@ -1,7 +1,7 @@
 {
   "name": "thomas-institut/apm-publication-api",
   "description": "Definition and client for APM's publication API",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "license": "GPL-3.0-or-later",
   "authors": [
     {
