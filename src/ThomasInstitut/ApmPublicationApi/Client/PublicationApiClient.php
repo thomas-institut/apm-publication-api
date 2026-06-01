@@ -17,6 +17,7 @@ use ThomasInstitut\ApmPublicationApi\PublicationListing;
 use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
 use ThomasInstitut\ApmPublicationApi\TranscriptionData;
+use ThomasInstitut\ApmPublicationApi\EditionPublication\EditionPublicationData;
 use ThomasInstitut\StandardApi\ApiResponse;
 use ThomasInstitut\StandardApi\ApiResult;
 
@@ -115,6 +116,10 @@ readonly class PublicationApiClient
                     ),
                     PublicationType::Transcription->value => $this->mapper->map(
                         TranscriptionData::class,
+                        $data['publicationData']
+                    ),
+                    PublicationType::Edition->value => $this->mapper->map(
+                        EditionPublicationData::class,
                         $data['publicationData']
                     ),
                     default => throw new InvalidResponseFromServerException("Invalid publication type: $type"),

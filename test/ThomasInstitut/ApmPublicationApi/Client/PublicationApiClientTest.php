@@ -14,6 +14,7 @@ use ThomasInstitut\ApmPublicationApi\PublicationListing;
 use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
 use ThomasInstitut\ApmPublicationApi\TranscriptionData;
+use ThomasInstitut\ApmPublicationApi\EditionPublication\EditionPublicationData;
 use ThomasInstitut\StandardApi\ApiResponse;
 use ThomasInstitut\StandardApi\ApiResult;
 
@@ -214,6 +215,48 @@ class PublicationApiClientTest extends TestCase
         $this->assertEquals('1r', $data->pages[0]->foliation);
         $this->assertCount(1, $data->pages[0]->columns);
         $this->assertEquals('Some text in col 1', $data->pages[0]->columns[0]->transcriptionText);
+    }
+
+    /**
+     * @throws HttpClientException
+     * @throws InvalidResponseFromServerException
+     */
+    public function testGetEdition(): void
+    {
+        $publicationData = [
+            'type' => PublicationType::Edition->value,
+            'id' => 789,
+            'versionTimeString' => '2026-06-01 10:00:00.000000',
+            'title' => 'Test Edition',
+            'description' => 'Test Edition Description',
+            'languageCode' => 'lat',
+            'mainText' => [
+                [
+                    'type' => 'text',
+                    'text' => 'In principio',
+                    'style' => 'normal'
+                ]
+            ],
+            'apparatuses' => [],
+            'witnesses' => [],
+            'siglaGroups' => []
+        ];
+
+        $client = $this->createClient([
+            'result' => ApiResult::Success->value,
+            'timeStamp' => 123456789,
+            'publicationData' => $publicationData
+        ]);
+
+        $response = $client->get(789);
+
+        $this->assertEquals(ApiResult::Success, $response->result);
+        $this->assertInstanceOf(EditionPublicationData::class, $response->publicationData);
+        /** @var EditionPublicationData $data */
+        $data = $response->publicationData;
+        $this->assertEquals('lat', $data->languageCode);
+        $this->assertCount(1, $data->mainText);
+        $this->assertEquals('In principio', $data->mainText[0]->text);
     }
 
     /**
