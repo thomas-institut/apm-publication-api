@@ -267,7 +267,7 @@ class FmtTextFactoryTest extends TestCase
         $this->assertIsString($json);
         $decoded = json_decode($json, true);
 
-        $result = FmtTextFactory::fromFmtTextJsonDecodedArray($decoded);
+        $result = FmtTextFactory::fromFmtTextJsonDecodedArray($decoded); // @phpstan-ignore-line
         $this->assertCount(3, $result);
         $this->assertInstanceOf(FmtTextTextToken::class, $result[0]);
         $this->assertInstanceOf(FmtTextGlueToken::class, $result[1]);
@@ -331,7 +331,7 @@ class FmtTextFactoryTest extends TestCase
         } catch (MappingError $e) {
             // Valinor wraps the DomainException thrown by the custom constructor.
             $this->addToAssertionCount(1);
-        } catch (DomainException $e) {
+        } catch (DomainException $e) { // @phpstan-ignore-line
             $this->addToAssertionCount(1);
         }
     }

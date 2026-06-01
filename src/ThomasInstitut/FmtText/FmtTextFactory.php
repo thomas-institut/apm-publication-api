@@ -48,7 +48,7 @@ class FmtTextFactory
      * Builds an array of FmtTextToken objects from a JSON-decoded array
      * (i.e., the structure produced by `JSON.stringify(fmtText)` on the TS side).
      *
-     * @param array $jsonDecodedArray
+     * @param array<int, mixed> $jsonDecodedArray
      * @return array<FmtTextToken>
      * @throws MappingError
      */
@@ -64,8 +64,12 @@ class FmtTextFactory
                 FmtTextTokenType::GLUE  => FmtTextGlueToken::class,
                 FmtTextTokenType::MARK  => FmtTextMarkToken::class,
                 FmtTextTokenType::EMPTY => FmtTextEmptyToken::class,
+                default               => throw new \DomainException("Unknown FmtTextTokenType: $type"),
             };
 
+        /**
+         * @var array<FmtTextToken>
+         */
         return (new MapperBuilder())
             ->infer(FmtTextToken::class, $inferFmtTextTokenClass)
             ->registerConstructor(
@@ -81,7 +85,7 @@ class FmtTextFactory
              * @param string|null $textDirection
              * @return FmtTextTextToken
              */
-                function (
+                function ( // @phpstan-ignore-line
                     string $text,
                     ?string $fontStyle = null,
                     ?string $fontWeight = null,
