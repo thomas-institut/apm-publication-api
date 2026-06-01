@@ -1,6 +1,8 @@
 <?php
 
-namespace ThomasInstitut\ApmPublicationApi;
+namespace ThomasInstitut\ApmPublicationApi\EditionPublication;
+
+use ThomasInstitut\ApmPublicationApi\PublicationData;
 
 class EditionPublicationData extends PublicationData
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace ThomasInstitut\ApmPublicationApi;
+namespace ThomasInstitut\ApmPublicationApi\EditionPublication;
 
 class Apparatus
 {
