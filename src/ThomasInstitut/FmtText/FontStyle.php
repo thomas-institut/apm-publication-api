@@ -26,6 +26,6 @@ namespace ThomasInstitut\FmtText;
  */
 enum FontStyle: string
 {
-    case NORMAL = '';
-    case ITALIC = 'italic';
+    case Normal = '';
+    case Italic = 'italic';
 }

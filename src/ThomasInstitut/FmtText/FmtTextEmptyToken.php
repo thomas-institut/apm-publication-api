@@ -4,5 +4,5 @@ namespace ThomasInstitut\FmtText;
 
 class FmtTextEmptyToken implements FmtTextToken
 {
-    public FmtTextTokenType $type = FmtTextTokenType::EMPTY;
+    public FmtTextTokenType $type = FmtTextTokenType::Empty;
 }

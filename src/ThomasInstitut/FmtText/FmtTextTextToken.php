@@ -4,7 +4,7 @@ namespace ThomasInstitut\FmtText;
 
 class FmtTextTextToken implements FmtTextToken
 {
-    public FmtTextTokenType $type = FmtTextTokenType::TEXT;
+    public FmtTextTokenType $type = FmtTextTokenType::Text;
 
     public string $text;
     /**

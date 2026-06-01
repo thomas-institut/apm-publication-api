@@ -26,6 +26,6 @@ namespace ThomasInstitut\FmtText;
  */
 enum FontWeight: string
 {
-    case NORMAL = '';
-    case BOLD = 'bold';
+    case Normal = '';
+    case Bold = 'bold';
 }

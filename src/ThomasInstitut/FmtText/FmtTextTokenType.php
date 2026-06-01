@@ -25,8 +25,8 @@ namespace ThomasInstitut\FmtText;
  */
 enum FmtTextTokenType: string
 {
-    case EMPTY = 'empty';
-    case TEXT = 'text';
-    case GLUE = 'glue';
-    case MARK = 'mark';
+    case Empty = 'empty';
+    case Text = 'text';
+    case Glue = 'glue';
+    case Mark = 'mark';
 }

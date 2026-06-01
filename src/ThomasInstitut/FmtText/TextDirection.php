@@ -9,7 +9,7 @@ namespace ThomasInstitut\FmtText;
  */
 enum TextDirection: string
 {
-    case DEFAULT = '';
-    case LTR = 'ltr';
-    case RTL = 'rtl';
+    case Default = '';
+    case Ltr = 'ltr';
+    case Rtl = 'rtl';
 }

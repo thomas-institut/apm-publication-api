@@ -26,10 +26,10 @@ namespace ThomasInstitut\FmtText;
  */
 enum MarkType: string
 {
-    case PARAGRAPH = 'par';
-    case SECTION = 'section';
+    case Paragraph = 'par';
+    case Section = 'section';
 
-    case ICON = 'icon';
+    case Icon = 'icon';
 
-    case IMAGE = 'image';
+    case Image = 'image';
 }

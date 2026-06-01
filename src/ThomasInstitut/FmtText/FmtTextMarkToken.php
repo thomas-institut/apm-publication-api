@@ -4,7 +4,7 @@ namespace ThomasInstitut\FmtText;
 
 class FmtTextMarkToken implements FmtTextToken
 {
-    public FmtTextTokenType $type = FmtTextTokenType::MARK;
+    public FmtTextTokenType $type = FmtTextTokenType::Mark;
 
     /**
      * The type of the mark, for example, 'paragraph', 'footnote', 'icon', 'symbol', etc..

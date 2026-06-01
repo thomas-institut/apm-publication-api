@@ -60,10 +60,10 @@ class FmtTextFactory
              * @return class-string<FmtTextTextToken|FmtTextGlueToken|FmtTextMarkToken|FmtTextEmptyToken>
              */
             static fn (FmtTextTokenType $type): string => match ($type) {
-                FmtTextTokenType::TEXT  => FmtTextTextToken::class,
-                FmtTextTokenType::GLUE  => FmtTextGlueToken::class,
-                FmtTextTokenType::MARK  => FmtTextMarkToken::class,
-                FmtTextTokenType::EMPTY => FmtTextEmptyToken::class,
+                FmtTextTokenType::Text  => FmtTextTextToken::class,
+                FmtTextTokenType::Glue  => FmtTextGlueToken::class,
+                FmtTextTokenType::Mark  => FmtTextMarkToken::class,
+                FmtTextTokenType::Empty => FmtTextEmptyToken::class,
             };
 
         /**

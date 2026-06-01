@@ -47,7 +47,7 @@ class FmtTextFactoryTest extends TestCase
         /** @var FmtTextTextToken $token */
         $token = $result[0];
         $this->assertSame('Hello', $token->text);
-        $this->assertSame(FmtTextTokenType::TEXT, $token->type);
+        $this->assertSame(FmtTextTokenType::Text, $token->type);
         $this->assertNull($token->fontStyle);
         $this->assertNull($token->fontWeight);
         $this->assertNull($token->verticalAlign);
@@ -120,7 +120,7 @@ class FmtTextFactoryTest extends TestCase
         $this->assertInstanceOf(FmtTextGlueToken::class, $result[0]);
         /** @var FmtTextGlueToken $glue */
         $glue = $result[0];
-        $this->assertSame(FmtTextTokenType::GLUE, $glue->type);
+        $this->assertSame(FmtTextTokenType::Glue, $glue->type);
         $this->assertNull($glue->space);
         $this->assertNull($glue->width);
         $this->assertNull($glue->stretch);
@@ -206,7 +206,7 @@ class FmtTextFactoryTest extends TestCase
 
         $this->assertCount(1, $result);
         $this->assertInstanceOf(FmtTextEmptyToken::class, $result[0]);
-        $this->assertSame(FmtTextTokenType::EMPTY, $result[0]->type);
+        $this->assertSame(FmtTextTokenType::Empty, $result[0]->type);
     }
 
     /**

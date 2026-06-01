@@ -26,7 +26,7 @@ namespace ThomasInstitut\FmtText;
  */
 enum VerticalAlign: string
 {
-    case BASELINE = '';
-    case SUBSCRIPT = 'subscript';
-    case SUPERSCRIPT = 'superscript';
+    case Baseline = '';
+    case Subscript = 'subscript';
+    case Superscript = 'superscript';
 }

@@ -15,7 +15,7 @@ namespace ThomasInstitut\FmtText;
  */
 class FmtTextGlueToken implements FmtTextToken
 {
-    public FmtTextTokenType $type = FmtTextTokenType::GLUE;
+    public FmtTextTokenType $type = FmtTextTokenType::Glue;
     /**
      * A string that a typesetter may interpret as a style or kind of space, for example, 'normal' or 'em',
      * in case a width is not specified.
