@@ -6,10 +6,9 @@ class PublicationListing
 {
 
     /**
-     * A string identifying the publication's type: 'transcription', 'edition', etc.
-     * @var string
+     * A PublicationType identifying the publication's type: 'transcription', 'edition', etc.
      */
-    public string $type;
+    public PublicationType $type;
     /**
      * The publication's id in APM
      *

@@ -2,9 +2,9 @@
 
 namespace ThomasInstitut\ApmPublicationApi;
 
-class PublicationType
+enum PublicationType: string
 {
-    const string Transcription = 'transcription';
-    const string Edition = 'edition';
-    const string Text = 'text';
+    case Transcription = 'transcription';
+    case Edition = 'edition';
+    case Text = 'text';
 }

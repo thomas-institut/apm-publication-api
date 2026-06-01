@@ -109,11 +109,11 @@ readonly class PublicationApiClient
 
             try {
                 $apiResponse->publicationData = match ($type) {
-                    PublicationType::Text => $this->mapper->map(
+                    PublicationType::Text->value => $this->mapper->map(
                         TextPublicationData::class,
                         $data['publicationData']
                     ),
-                    PublicationType::Transcription => $this->mapper->map(
+                    PublicationType::Transcription->value => $this->mapper->map(
                         TranscriptionData::class,
                         $data['publicationData']
                     ),

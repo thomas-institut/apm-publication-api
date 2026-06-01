@@ -91,7 +91,7 @@ class PublicationApiClientTest extends TestCase
             'result' => ApiResult::Success->value,
             'timeStamp' => time(),
             'publicationData' => [
-                'type' => PublicationType::Text,
+                'type' => PublicationType::Text->value,
                 'id' => 123,
                 'versionTimeString' => '2026-01-20 15:23:20.123456',
                 'title' => 'Test Publication',
@@ -122,9 +122,9 @@ class PublicationApiClientTest extends TestCase
             'result' => ApiResult::Success->value,
             'timeStamp' => 123456789,
             'publications' => [
-                ['type' => 'test', 'id' => 1, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Test Publication', 'description' => 'This is a test publication'],
-                ['type' => 'test', 'id' => 2, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Another Publication', 'description' => 'Another test publication'],
-                ['type' => 'test', 'id' => 3, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Yet Another Publication', 'description' => 'Yet another test publication']
+                ['type' => PublicationType::Text->value, 'id' => 1, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Test Publication', 'description' => 'This is a test publication'],
+                ['type' => PublicationType::Text->value, 'id' => 2, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Another Publication', 'description' => 'Another test publication'],
+                ['type' => PublicationType::Text->value, 'id' => 3, 'versionTimeString' => '2026-01-20 15:23:20.123456', 'title' => 'Yet Another Publication', 'description' => 'Yet another test publication']
             ]
         ]);
 
@@ -144,7 +144,7 @@ class PublicationApiClientTest extends TestCase
     public function testGet(): void
     {
         $publicationData = [
-            'type' => PublicationType::Text,
+            'type' => PublicationType::Text->value,
             'id' => 123,
             'versionTimeString' => '2026-01-20 15:23:20.123456',
             'title' => 'Test Publication',
@@ -172,7 +172,7 @@ class PublicationApiClientTest extends TestCase
     public function testGetTranscription(): void
     {
         $publicationData = [
-            'type' => PublicationType::Transcription,
+            'type' => PublicationType::Transcription->value,
             'id' => 456,
             'versionTimeString' => '2026-01-20 15:23:20.123456',
             'title' => 'Test Transcription',
@@ -388,7 +388,7 @@ class PublicationApiClientTest extends TestCase
         $client = $this->createClient([
             'timeStamp' => 123456789,
             'publicationData' => [
-                'type' => PublicationType::Text,
+                'type' => PublicationType::Text->value,
                 'id' => 123,
                 'versionTimeString' => '2026-01-20 15:23:20.123456',
                 'title' => 'Test',
@@ -410,7 +410,7 @@ class PublicationApiClientTest extends TestCase
         $client = $this->createClient([
             'result' => ApiResult::Success->value,
             'publicationData' => [
-                'type' => PublicationType::Text,
+                'type' => PublicationType::Text->value,
                 'id' => 123,
                 'versionTimeString' => '2026-01-20 15:23:20.123456',
                 'title' => 'Test',
@@ -482,7 +482,7 @@ class PublicationApiClientTest extends TestCase
             'result' => ApiResult::Success->value,
             'timeStamp' => time(),
             'publicationData' => [
-                'type' => PublicationType::Text,
+                'type' => PublicationType::Text->value,
                 'id' => 'not an int' // This should trigger WrongValueTypeException
             ]
         ]);
