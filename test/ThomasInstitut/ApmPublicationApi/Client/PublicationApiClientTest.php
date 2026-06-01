@@ -45,7 +45,7 @@ class PublicationApiClientTest extends TestCase
 
     /**
      * @throws InvalidResponseFromServerException
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testListUrl(): void
     {
@@ -76,7 +76,7 @@ class PublicationApiClientTest extends TestCase
 
     /**
      * @throws InvalidResponseFromServerException
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testGetUrl(): void
     {
@@ -114,7 +114,7 @@ class PublicationApiClientTest extends TestCase
 
     /**
      * @throws InvalidResponseFromServerException
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testList(): void
     {
@@ -139,7 +139,7 @@ class PublicationApiClientTest extends TestCase
 
     /**
      * @throws HttpClientException
-     * @throws InvalidResponseFromServerException
+     * @throws InvalidResponseFromServerException|NotFoundException
      */
     public function testGet(): void
     {
