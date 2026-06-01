@@ -4,13 +4,15 @@ namespace ThomasInstitut\ApmPublicationApi;
 
 use ThomasInstitut\FmtText\FmtTextToken;
 
-
-class MainTextToken
+class ApparatusSubEntry
 {
-    public MainTextTokenType $type;
+    public SubEntryType $type;
     /**
      * @var string|array<FmtTextToken>
      */
     public string|array $text;
-    public string $style;
+
+    public WitnessData $witnessData;
+    public string $keyword;
+    public int $position;
 }
