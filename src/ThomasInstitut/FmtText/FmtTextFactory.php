@@ -56,15 +56,14 @@ class FmtTextFactory
     {
         $inferFmtTextTokenClass =
             /**
-             * @param string $type
+             * @param FmtTextTokenType $type
              * @return class-string<FmtTextTextToken|FmtTextGlueToken|FmtTextMarkToken|FmtTextEmptyToken>
              */
-            static fn (string $type): string => match ($type) {
+            static fn (FmtTextTokenType $type): string => match ($type) {
                 FmtTextTokenType::TEXT  => FmtTextTextToken::class,
                 FmtTextTokenType::GLUE  => FmtTextGlueToken::class,
                 FmtTextTokenType::MARK  => FmtTextMarkToken::class,
                 FmtTextTokenType::EMPTY => FmtTextEmptyToken::class,
-                default               => throw new \DomainException("Unknown FmtTextTokenType: $type"),
             };
 
         /**
@@ -72,44 +71,6 @@ class FmtTextFactory
          */
         return (new MapperBuilder())
             ->infer(FmtTextToken::class, $inferFmtTextTokenClass)
-            ->registerConstructor(
-            /**
-             * Custom constructor for FmtTextTextToken that validates `textDirection`.
-             *
-             * @param string $text
-             * @param string|null $fontStyle
-             * @param string|null $fontWeight
-             * @param string|null $verticalAlign
-             * @param float|null $fontSize
-             * @param string|null $classList
-             * @param string|null $textDirection
-             * @return FmtTextTextToken
-             */
-                function ( // @phpstan-ignore-line
-                    string $text,
-                    ?string $fontStyle = null,
-                    ?string $fontWeight = null,
-                    ?string $verticalAlign = null,
-                    ?float $fontSize = null,
-                    ?string $classList = null,
-                    ?string $textDirection = null,
-                ): FmtTextTextToken {
-                    if (!TextDirection::isValid($textDirection)) {
-                        throw new \DomainException(
-                            "Invalid textDirection '$textDirection': must be '', 'ltr' or 'rtl'."
-                        );
-                    }
-                    $token = new FmtTextTextToken();
-                    $token->text = $text;
-                    $token->fontStyle = $fontStyle;
-                    $token->fontWeight = $fontWeight;
-                    $token->verticalAlign = $verticalAlign;
-                    $token->fontSize = $fontSize;
-                    $token->classList = $classList;
-                    $token->textDirection = $textDirection;
-                    return $token;
-                }
-            )
             ->allowSuperfluousKeys()
             ->mapper()
             ->map('array<' . FmtTextToken::class . '>', $jsonDecodedArray);

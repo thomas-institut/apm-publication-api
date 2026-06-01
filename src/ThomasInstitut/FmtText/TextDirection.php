@@ -7,20 +7,9 @@ namespace ThomasInstitut\FmtText;
  *
  * Mirrors the TS type `'' | 'ltr' | 'rtl'`.
  */
-class TextDirection
+enum TextDirection: string
 {
-    public const string DEFAULT = '';
-    public const string LTR = 'ltr';
-    public const string RTL = 'rtl';
-
-    /**
-     * Returns true if the given value is a valid text direction.
-     */
-    public static function isValid(?string $value): bool
-    {
-        if ($value === null) {
-            return true;
-        }
-        return in_array($value, [self::DEFAULT, self::LTR, self::RTL], true);
-    }
+    case DEFAULT = '';
+    case LTR = 'ltr';
+    case RTL = 'rtl';
 }

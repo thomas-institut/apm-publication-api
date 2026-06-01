@@ -24,9 +24,9 @@ namespace ThomasInstitut\FmtText;
  *
  * Mirrors the TS module `VerticalAlign.ts`.
  */
-class VerticalAlign
+enum VerticalAlign: string
 {
-    public const string BASELINE = '';
-    public const string SUBSCRIPT = 'subscript';
-    public const string SUPERSCRIPT = 'superscript';
+    case BASELINE = '';
+    case SUBSCRIPT = 'subscript';
+    case SUPERSCRIPT = 'superscript';
 }

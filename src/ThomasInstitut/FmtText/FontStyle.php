@@ -24,8 +24,8 @@ namespace ThomasInstitut\FmtText;
  *
  * Mirrors the TS module `FontStyle.ts`.
  */
-class FontStyle
+enum FontStyle: string
 {
-    public const string NORMAL = '';
-    public const string ITALIC = 'italic';
+    case NORMAL = '';
+    case ITALIC = 'italic';
 }

@@ -24,8 +24,8 @@ namespace ThomasInstitut\FmtText;
  *
  * Mirrors the TS module `FontWeight.ts`.
  */
-class FontWeight
+enum FontWeight: string
 {
-    public const string NORMAL = '';
-    public const string BOLD = 'bold';
+    case NORMAL = '';
+    case BOLD = 'bold';
 }

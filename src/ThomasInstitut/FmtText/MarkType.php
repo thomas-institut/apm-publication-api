@@ -24,8 +24,12 @@ namespace ThomasInstitut\FmtText;
  *
  * Mirrors the TS module `MarkType.ts`.
  */
-class MarkType
+enum MarkType: string
 {
-    public const string PARAGRAPH = 'par';
-    public const string SECTION = 'section';
+    case PARAGRAPH = 'par';
+    case SECTION = 'section';
+
+    case ICON = 'icon';
+
+    case IMAGE = 'image';
 }

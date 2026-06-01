@@ -80,12 +80,12 @@ class FmtTextFactoryTest extends TestCase
         $token = $result[0];
         $this->assertInstanceOf(FmtTextTextToken::class, $token);
         $this->assertSame('مرحبا', $token->text);
-        $this->assertSame('italic', $token->fontStyle);
-        $this->assertSame('bold', $token->fontWeight);
-        $this->assertSame('superscript', $token->verticalAlign);
+        $this->assertSame('italic', $token->fontStyle?->value);
+        $this->assertSame('bold', $token->fontWeight?->value);
+        $this->assertSame('superscript', $token->verticalAlign?->value);
         $this->assertSame(1.25, $token->fontSize);
         $this->assertSame('highlight emph', $token->classList);
-        $this->assertSame('rtl', $token->textDirection);
+        $this->assertSame('rtl', $token->textDirection?->value);
     }
 
     /**
@@ -158,7 +158,7 @@ class FmtTextFactoryTest extends TestCase
     public function testFromArrayMinimalMarkToken(): void
     {
         $payload = [
-            ['type' => 'mark', 'markType' => 'paragraph'],
+            ['type' => 'mark', 'markType' => 'par'],
         ];
         $result = FmtTextFactory::fromFmtTextJsonDecodedArray($payload);
 
@@ -166,7 +166,7 @@ class FmtTextFactoryTest extends TestCase
         /** @var FmtTextMarkToken $mark */
         $mark = $result[0];
         $this->assertInstanceOf(FmtTextMarkToken::class, $mark);
-        $this->assertSame('paragraph', $mark->markType);
+        $this->assertSame('par', $mark->markType->value);
         $this->assertNull($mark->style);
         $this->assertNull($mark->altText);
     }
@@ -189,7 +189,7 @@ class FmtTextFactoryTest extends TestCase
         /** @var FmtTextMarkToken $mark */
         $mark = $result[0];
         $this->assertInstanceOf(FmtTextMarkToken::class, $mark);
-        $this->assertSame('icon', $mark->markType);
+        $this->assertSame('icon', $mark->markType->value);
         $this->assertSame('icon-1', $mark->style);
         $this->assertSame('[icon]', $mark->altText);
     }
@@ -221,7 +221,7 @@ class FmtTextFactoryTest extends TestCase
             ['type' => 'text', 'text' => 'Hello'],
             ['type' => 'glue'],
             ['type' => 'text', 'text' => 'world', 'fontWeight' => 'bold'],
-            ['type' => 'mark', 'markType' => 'paragraph', 'style' => 'h1'],
+            ['type' => 'mark', 'markType' => 'par', 'style' => 'h1'],
             ['type' => 'empty'],
             ['type' => 'text', 'text' => '!', 'textDirection' => 'ltr'],
         ];
@@ -238,16 +238,16 @@ class FmtTextFactoryTest extends TestCase
         /** @var FmtTextTextToken $t2 */
         $t2 = $result[2];
         $this->assertSame('world', $t2->text);
-        $this->assertSame('bold', $t2->fontWeight);
+        $this->assertSame('bold', $t2->fontWeight?->value);
 
         /** @var FmtTextMarkToken $m */
         $m = $result[3];
-        $this->assertSame('paragraph', $m->markType);
+        $this->assertSame('par', $m->markType->value);
         $this->assertSame('h1', $m->style);
 
         /** @var FmtTextTextToken $t5 */
         $t5 = $result[5];
-        $this->assertSame('ltr', $t5->textDirection);
+        $this->assertSame('ltr', $t5->textDirection?->value);
     }
 
     /**
@@ -275,7 +275,7 @@ class FmtTextFactoryTest extends TestCase
         /** @var FmtTextTextToken $t */
         $t = $result[2];
         $this->assertSame('ipsum', $t->text);
-        $this->assertSame('italic', $t->fontStyle);
+        $this->assertSame('italic', $t->fontStyle?->value);
     }
 
     /**
@@ -317,7 +317,7 @@ class FmtTextFactoryTest extends TestCase
         $result = FmtTextFactory::fromFmtTextJsonDecodedArray($payload);
         /** @var FmtTextTextToken $t */
         $t = $result[0];
-        $this->assertSame('', $t->textDirection);
+        $this->assertSame('', $t->textDirection?->value);
     }
 
     public function testFromArrayRejectsInvalidTextDirection(): void
@@ -328,10 +328,10 @@ class FmtTextFactoryTest extends TestCase
         try {
             FmtTextFactory::fromFmtTextJsonDecodedArray($payload);
             $this->fail('Expected an exception for invalid textDirection');
-        } catch (MappingError $e) {
+        } catch (MappingError) {
             // Valinor wraps the DomainException thrown by the custom constructor.
             $this->addToAssertionCount(1);
-        } catch (DomainException $e) { // @phpstan-ignore-line
+        } catch (DomainException) { // @phpstan-ignore-line
             $this->addToAssertionCount(1);
         }
     }
@@ -341,7 +341,8 @@ class FmtTextFactoryTest extends TestCase
         $payload = [
             ['type' => 'unicorn'],
         ];
-        $this->expectException(\Throwable::class);
+        // Valinor will fail to map 'unicorn' to FmtTextTokenType enum
+        $this->expectException(MappingError::class);
         FmtTextFactory::fromFmtTextJsonDecodedArray($payload);
     }
 

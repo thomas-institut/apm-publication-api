@@ -20,14 +20,13 @@
 namespace ThomasInstitut\FmtText;
 
 /**
- * String constants identifying the type of a FmtText token.
+ * String constants identifying FmtText token types
  *
- * Mirrors the TS module `FmtTextTokenType.ts`.
  */
-class FmtTextTokenType
+enum FmtTextTokenType: string
 {
-    public const string EMPTY = 'empty';
-    public const string TEXT = 'text';
-    public const string GLUE = 'glue';
-    public const string MARK = 'mark';
+    case EMPTY = 'empty';
+    case TEXT = 'text';
+    case GLUE = 'glue';
+    case MARK = 'mark';
 }
