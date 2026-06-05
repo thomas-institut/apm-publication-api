@@ -12,7 +12,10 @@ class ApparatusSubEntry
      */
     public string|array $text;
 
-    public WitnessData $witnessData;
+    /**
+     * @var array<WitnessData>
+     */
+    public array $witnessData;
     public string $keyword;
     public int $position;
 }
