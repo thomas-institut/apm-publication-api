@@ -2,6 +2,7 @@
 
 namespace ThomasInstitut\ApmPublicationApi\Client;
 
+use CuyZ\Valinor\Mapper\MappingError;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
@@ -16,6 +17,8 @@ use ThomasInstitut\ApmPublicationApi\TextPublicationData;
 use ThomasInstitut\ApmPublicationApi\TranscriptionData;
 use ThomasInstitut\ApmPublicationApi\EditionPublication\EditionPublicationData;
 use ThomasInstitut\FmtText\FmtTextTextToken;
+use ThomasInstitut\FmtText\FmtTextTokenType;
+use ThomasInstitut\FmtText\FontWeight;
 use ThomasInstitut\StandardApi\ApiResponse;
 use ThomasInstitut\StandardApi\ApiResult;
 
@@ -218,6 +221,8 @@ class PublicationApiClientTest extends TestCase
         $this->assertEquals('Some text in col 1', $data->pages[0]->columns[0]->transcriptionText);
     }
 
+
+
     /**
      * @throws HttpClientException
      * @throws InvalidResponseFromServerException|NotFoundException
@@ -290,6 +295,38 @@ class PublicationApiClientTest extends TestCase
         $this->assertCount(3, $data->apparatuses[0]->entries[0]->subEntries[0]->text);
     }
 
+    public function testGetEditionCase2(): void {
+        $pubData = [
+            'type' => PublicationType::Edition->value,
+            'id' => 123,
+            'editionId' => 25,
+            'title' => 'Edition Title',
+            'versionTimeString' => '2023-01-01 00:00:00.000000',
+            'description' => 'Edition Description',
+            'languageCode' => 'ara',
+            'mainText' => [
+                [ 'type' => 'text', 'text' => 'Hello'],
+                [ 'type' => 'glue'],
+                [ 'type' => 'text', 'text' => [ 'another', ' ', 'string']],
+                [ 'type' => 'text', 'text' => [['type' => FmtTextTokenType::Text->value, 'text' => 'World', 'fontWeight' => FontWeight::Bold->value]] ]
+            ],
+            'apparatuses' => [],
+            'witnesses' => [],
+            'siglaGroups' => []
+        ];
+
+        $client = $this->createClient([
+            'result' => ApiResult::Success->value,
+            'timeStamp' => 123456789,
+            'publicationData' => $pubData
+        ]);
+
+        $response = $client->get(789);
+
+        $this->assertEquals(ApiResult::Success, $response->result);
+        $this->assertInstanceOf(EditionPublicationData::class, $response->publicationData);
+    }
+
     /**
      * @throws HttpClientException|NotFoundException
      */
@@ -318,9 +355,38 @@ class PublicationApiClientTest extends TestCase
             ]
         ]);
 
-        $this->expectException(InvalidResponseFromServerException::class);
-        $this->expectExceptionMessage('Server response is invalid');
-        $client->get(789);
+        try {
+            $client->get(789);
+            $this->fail('Expected InvalidResponseFromServerException to be thrown.');
+        } catch (InvalidResponseFromServerException $e) {
+            $this->assertStringContainsString('Server response is invalid', $e->getMessage());
+            $this->assertTrue(
+                $e->getPrevious() instanceof CustomMapperErrorException || $e->getPrevious() instanceof MappingError
+            );
+        }
+    }
+
+    /**
+     * @throws HttpClientException|NotFoundException
+     */
+    public function testGetEditionThrowsOnHydrationError(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResult::Success->value,
+            'timeStamp' => 123456789,
+            'publicationData' => [
+                'type' => PublicationType::Edition->value,
+                'id' => 'not an int',
+            ]
+        ]);
+
+        try {
+            $client->get(789);
+            $this->fail('Expected InvalidResponseFromServerException to be thrown.');
+        } catch (InvalidResponseFromServerException $e) {
+            $this->assertStringContainsString('Server response is invalid', $e->getMessage());
+            $this->assertInstanceOf(MappingError::class, $e->getPrevious());
+        }
     }
 
     /**

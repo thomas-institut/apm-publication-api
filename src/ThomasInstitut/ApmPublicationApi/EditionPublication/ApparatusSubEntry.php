@@ -2,6 +2,7 @@
 
 namespace ThomasInstitut\ApmPublicationApi\EditionPublication;
 
+use ThomasInstitut\ApmPublicationApi\Client\CompactFmtText;
 use ThomasInstitut\FmtText\FmtTextToken;
 
 class ApparatusSubEntry
@@ -10,6 +11,7 @@ class ApparatusSubEntry
     /**
      * @var string|array<string|FmtTextToken>
      */
+    #[CompactFmtText]
     public string|array $text;
 
     /**
