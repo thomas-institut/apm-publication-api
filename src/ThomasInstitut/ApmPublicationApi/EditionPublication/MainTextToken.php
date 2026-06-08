@@ -9,7 +9,9 @@ class MainTextToken
 {
     public MainTextTokenType $type;
     /**
-     * @var string|array<FmtTextToken>
+     * CompactFmtText
+     *
+     * @var string|array<string|FmtTextToken>
      */
     public string|array $text;
     public string $style;

@@ -418,4 +418,90 @@ class FmtTextFactoryTest extends TestCase
         $this->assertSame('héllo', $t0->text);
         $this->assertSame('wörld', $t2->text);
     }
+
+    // --- fromCompactFmtText -----------------------------------------------
+
+    public function testFromCompactFmtTextWithString(): void
+    {
+        $result = FmtTextFactory::fromCompactFmtText('hello world');
+        $this->assertCount(3, $result);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[0]);
+        $this->assertInstanceOf(FmtTextGlueToken::class, $result[1]);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[2]);
+        $this->assertSame('hello', $result[0]->text);
+        $this->assertSame('world', $result[2]->text);
+    }
+
+    public function testFromCompactFmtTextWithMixedArray(): void
+    {
+        $existingToken = new FmtTextTextToken();
+        $existingToken->text = 'existing';
+
+        $compact = [
+            'hello',
+            $existingToken,
+            'world'
+        ];
+
+        $result = FmtTextFactory::fromCompactFmtText($compact);
+
+        // 'hello' -> 1 token
+        // $existingToken -> 1 token
+        // 'world' -> 1 token
+        $this->assertCount(3, $result);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[0]);
+        $this->assertSame('hello', $result[0]->text);
+        $this->assertSame($existingToken, $result[1]);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[2]);
+        $this->assertSame('world', $result[2]->text);
+    }
+
+    public function testFromCompactFmtTextWithStringsNeedingSplitting(): void
+    {
+        $compact = [
+            'a b',
+            'c'
+        ];
+
+        $result = FmtTextFactory::fromCompactFmtText($compact);
+
+        // 'a b' -> 'a', glue, 'b' (3 tokens)
+        // 'c' -> 'c' (1 token)
+        $this->assertCount(4, $result);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[0]);
+        $this->assertInstanceOf(FmtTextGlueToken::class, $result[1]);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[2]);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[3]);
+        $this->assertSame('a', $result[0]->text);
+        $this->assertSame('b', $result[2]->text);
+        $this->assertSame('c', $result[3]->text);
+    }
+
+    public function testFromCompactFmtTextWithNonHydratedArrays(): void
+    {
+        $compact = [
+            ['type' => 'text', 'text' => 'hello'],
+            'world',
+            ['type' => 'glue'],
+        ];
+
+        $result = FmtTextFactory::fromCompactFmtText($compact);
+
+        $this->assertCount(3, $result);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[0]);
+        $this->assertSame('hello', $result[0]->text);
+        $this->assertInstanceOf(FmtTextTextToken::class, $result[1]);
+        $this->assertSame('world', $result[1]->text);
+        $this->assertInstanceOf(FmtTextGlueToken::class, $result[2]);
+    }
+
+    public function testFromCompactFmtTextThrowsOnInvalidArray(): void
+    {
+        $compact = [
+            ['type' => 'invalid'],
+        ];
+
+        $this->expectException(MappingError::class);
+        FmtTextFactory::fromCompactFmtText($compact);
+    }
 }

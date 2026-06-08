@@ -8,7 +8,7 @@ class ApparatusSubEntry
 {
     public SubEntryType $type;
     /**
-     * @var string|array<FmtTextToken>
+     * @var string|array<string|FmtTextToken>
      */
     public string|array $text;
 

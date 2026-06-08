@@ -45,14 +45,52 @@ class FmtTextFactory
     }
 
     /**
-     * Builds an array of FmtTextToken objects from a JSON-decoded array
-     * (i.e., the structure produced by `JSON.stringify(fmtText)` on the TS side).
-     *
      * @param array<int, mixed> $jsonDecodedArray
      * @return array<FmtTextToken>
      * @throws MappingError
      */
     public static function fromFmtTextJsonDecodedArray(array $jsonDecodedArray): array
+    {
+        $tokens = [];
+        foreach ($jsonDecodedArray as $data) {
+            $tokens[] = self::mapToken($data);
+        }
+        return $tokens;
+    }
+
+    /**
+     * @param string|array<string|FmtTextToken|array<string, mixed>> $compactFmtText
+     * @return array<FmtTextToken>
+     * @throws MappingError
+     */
+    public static function fromCompactFmtText(string|array $compactFmtText): array
+    {
+        if (is_string($compactFmtText)) {
+            return self::fromString($compactFmtText);
+        }
+
+        $result = [];
+        foreach ($compactFmtText as $item) {
+            if ($item instanceof FmtTextToken) {
+                $result[] = $item;
+            } elseif (is_string($item)) {
+                $tokens = self::fromString($item);
+                foreach ($tokens as $token) {
+                    $result[] = $token;
+                }
+            } elseif (is_array($item)) {
+                $result[] = self::mapToken($item);
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @param mixed $data
+     * @return FmtTextToken
+     * @throws MappingError
+     */
+    private static function mapToken(mixed $data): FmtTextToken
     {
         $inferFmtTextTokenClass =
             /**
@@ -66,13 +104,10 @@ class FmtTextFactory
                 FmtTextTokenType::Empty => FmtTextEmptyToken::class,
             };
 
-        /**
-         * @var array<FmtTextToken>
-         */
         return (new MapperBuilder())
             ->infer(FmtTextToken::class, $inferFmtTextTokenClass)
             ->allowSuperfluousKeys()
             ->mapper()
-            ->map('array<' . FmtTextToken::class . '>', $jsonDecodedArray);
+            ->map(FmtTextToken::class, $data);
     }
 }

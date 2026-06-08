@@ -10,17 +10,17 @@ class ApparatusEntry
     public int $from;
     public int $to;
     /**
-     * @var string|array<FmtTextToken>
+     * @var string|array<string|FmtTextToken>
      */
     public string|array $preLemma;
     /**
-     * @var string|array<FmtTextToken>
+     * @var string|array<string|FmtTextToken>
      */
     public string|array $postLemma;
 
     public string $lemmaText;
     /**
-     * @var string|array<FmtTextToken>
+     * @var string|array<string|FmtTextToken>
      */
     public string|array $separator;
 
