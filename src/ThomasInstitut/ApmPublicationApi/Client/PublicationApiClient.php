@@ -103,29 +103,31 @@ readonly class PublicationApiClient
             $apiResponse = new PublicationApiGetResponse();
             $this->hydrateBaseResponse($apiResponse, $data);
 
-            if (!isset($data['publicationData']) || !is_array($data['publicationData']) || !isset($data['publicationData']['type'])) {
+            if (!isset($data['publicationData']) || !is_array($data['publicationData']) || !$this->onlyHasStringKeys($data['publicationData']) || !isset($data['publicationData']['type'])) {
                 throw new InvalidResponseFromServerException("Invalid response from server: no publication type");
             }
-            $type = is_scalar($data['publicationData']['type']) ? (string)$data['publicationData']['type'] : '';
+            /** @var array<string, mixed> $publicationData */
+            $publicationData = $data['publicationData'];
+            $type = is_scalar($publicationData['type']) ? (string)$publicationData['type'] : '';
 
             try {
                 $apiResponse->publicationData = match ($type) {
                     PublicationType::Text->value => $this->mapper->map(
                         TextPublicationData::class,
-                        $data['publicationData']
+                        $publicationData
                     ),
                     PublicationType::Transcription->value => $this->mapper->map(
                         TranscriptionData::class,
-                        $data['publicationData']
+                        $publicationData
                     ),
-                    PublicationType::Edition->value => $this->mapper->map(
-                        EditionPublicationData::class,
-                        $data['publicationData']
-                    ),
+                    PublicationType::Edition->value => EditionPublicationDataMapper::map($publicationData),
                     default => throw new InvalidResponseFromServerException("Invalid publication type: $type"),
                 };
             } catch (MappingError $e) {
                 $this->debug && $this->logger->debug("Mapping error in 'get $id': ", [ ...$e->messages()]);
+                throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), 0, $e);
+            } catch (CustomMapperErrorException $e) {
+                $this->debug && $this->logger->debug("Mapping error in 'get $id': " . $e->getMessage());
                 throw new InvalidResponseFromServerException("Server response is invalid: " . $e->getMessage(), 0, $e);
             }
             return $apiResponse;
@@ -190,4 +192,5 @@ readonly class PublicationApiClient
         }
         return true;
     }
+
 }

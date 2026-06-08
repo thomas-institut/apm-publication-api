@@ -15,6 +15,7 @@ use ThomasInstitut\ApmPublicationApi\PublicationType;
 use ThomasInstitut\ApmPublicationApi\TextPublicationData;
 use ThomasInstitut\ApmPublicationApi\TranscriptionData;
 use ThomasInstitut\ApmPublicationApi\EditionPublication\EditionPublicationData;
+use ThomasInstitut\FmtText\FmtTextTextToken;
 use ThomasInstitut\StandardApi\ApiResponse;
 use ThomasInstitut\StandardApi\ApiResult;
 
@@ -219,7 +220,7 @@ class PublicationApiClientTest extends TestCase
 
     /**
      * @throws HttpClientException
-     * @throws InvalidResponseFromServerException
+     * @throws InvalidResponseFromServerException|NotFoundException
      */
     public function testGetEdition(): void
     {
@@ -237,7 +238,30 @@ class PublicationApiClientTest extends TestCase
                     'style' => 'normal'
                 ]
             ],
-            'apparatuses' => [],
+            'apparatuses' => [
+                [
+                    'type' => 'criticus',
+                    'entries' => [
+                        [
+                            'from' => 0,
+                            'to' => 1,
+                            'preLemma' => 'ante',
+                            'postLemma' => 'post',
+                            'lemmaText' => 'lemma',
+                            'separator' => ' - ',
+                            'subEntries' => [
+                                [
+                                    'type' => 'variant',
+                                    'text' => 'variant text',
+                                    'witnessData' => [],
+                                    'keyword' => 'kw',
+                                    'position' => 1,
+                                ]
+                            ],
+                        ],
+                    ],
+                ],
+            ],
             'witnesses' => [],
             'siglaGroups' => []
         ];
@@ -256,11 +280,51 @@ class PublicationApiClientTest extends TestCase
         $data = $response->publicationData;
         $this->assertEquals('lat', $data->languageCode);
         $this->assertCount(1, $data->mainText);
-        $this->assertEquals('In principio', $data->mainText[0]->text);
+        $this->assertIsArray($data->mainText[0]->text);
+        $this->assertCount(3, $data->mainText[0]->text);
+        $this->assertInstanceOf(FmtTextTextToken::class, $data->mainText[0]->text[0]);
+        $this->assertEquals('In', $data->mainText[0]->text[0]->text);
+        $this->assertIsArray($data->apparatuses[0]->entries[0]->preLemma);
+        $this->assertCount(1, $data->apparatuses[0]->entries[0]->preLemma);
+        $this->assertIsArray($data->apparatuses[0]->entries[0]->subEntries[0]->text);
+        $this->assertCount(3, $data->apparatuses[0]->entries[0]->subEntries[0]->text);
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
+     */
+    public function testGetEditionThrowsOnInvalidCompactFmtText(): void
+    {
+        $client = $this->createClient([
+            'result' => ApiResult::Success->value,
+            'timeStamp' => 123456789,
+            'publicationData' => [
+                'type' => PublicationType::Edition->value,
+                'id' => 789,
+                'versionTimeString' => '2026-06-01 10:00:00.000000',
+                'title' => 'Test Edition',
+                'description' => 'Test Edition Description',
+                'languageCode' => 'lat',
+                'mainText' => [
+                    [
+                        'type' => 'text',
+                        'text' => [['foo' => 'bar']],
+                        'style' => 'normal',
+                    ]
+                ],
+                'apparatuses' => [],
+                'witnesses' => [],
+                'siglaGroups' => []
+            ]
+        ]);
+
+        $this->expectException(InvalidResponseFromServerException::class);
+        $this->expectExceptionMessage('Server response is invalid');
+        $client->get(789);
+    }
+
+    /**
+     * @throws HttpClientException|NotFoundException
      */
     public function testListThrowsOnServerError(): void
     {
@@ -275,7 +339,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testListThrowsOnMissingPublications(): void
     {
@@ -290,7 +354,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws InvalidResponseFromServerException
+     * @throws InvalidResponseFromServerException|NotFoundException
      */
     public function testListThrowsOnClientException(): void
     {
@@ -305,7 +369,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testGetThrowsOnMissingPublicationData(): void
     {
@@ -320,7 +384,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testGetThrowsOnInvalidPublicationType(): void
     {
@@ -339,7 +403,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testListThrowsOnMalformedJson(): void
     {
@@ -351,7 +415,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testGetThrowsOnMalformedJson(): void
     {
@@ -363,7 +427,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testGetThrowsOnServerError(): void
     {
@@ -378,7 +442,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testListThrowsOnInvalidPublicationsType(): void
     {
@@ -394,7 +458,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testListThrowsOnMissingResult(): void
     {
@@ -409,7 +473,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testListThrowsOnMissingTimestamp(): void
     {
@@ -424,7 +488,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testGetThrowsOnMissingResult(): void
     {
@@ -446,7 +510,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testGetThrowsOnMissingTimestamp(): void
     {
@@ -468,7 +532,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testListThrowsOnPublicationNotAnArray(): void
     {
@@ -486,7 +550,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testListThrowsOnHydrationError(): void
     {
@@ -504,7 +568,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws InvalidResponseFromServerException
+     * @throws InvalidResponseFromServerException|NotFoundException
      */
     public function testGetThrowsOnClientException(): void
     {
@@ -517,7 +581,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testGetThrowsOnHydrationError(): void
     {
@@ -536,7 +600,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testThrowsOnJsonNotArray(): void
     {
@@ -548,7 +612,7 @@ class PublicationApiClientTest extends TestCase
     }
 
     /**
-     * @throws HttpClientException
+     * @throws HttpClientException|NotFoundException
      */
     public function testThrowsOnNonStringKeys(): void
     {
