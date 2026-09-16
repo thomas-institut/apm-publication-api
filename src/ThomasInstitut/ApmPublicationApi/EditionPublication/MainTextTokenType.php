@@ -10,4 +10,7 @@ enum MainTextTokenType: string
     case ParagraphEnd = 'paragraph_end';
     case NumberingLabel = 'numbering_label';
     case FoliationChangeMarker = 'foliation_change_marker';
+
+    case ChunkStart = 'chunk_start';
+    case ChunkEnd = 'chunk_end';
 }
