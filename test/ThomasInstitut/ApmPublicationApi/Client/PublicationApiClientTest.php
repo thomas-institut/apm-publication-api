@@ -308,6 +308,8 @@ class PublicationApiClientTest extends TestCase
                 [ 'type' => 'text', 'text' => 'Hello'],
                 [ 'type' => 'glue'],
                 [ 'type' => 'text', 'text' => [ 'another', ' ', 'string']],
+                [ 'type' => 'chunk_start', 'chunkId' => 'chunk1'],
+                [ 'type' => 'chunk_end', 'chunkId' => 'chunk1'],
                 [ 'type' => 'text', 'text' => [['type' => FmtTextTokenType::Text->value, 'text' => 'World', 'fontWeight' => FontWeight::Bold->value]] ]
             ],
             'apparatuses' => [],
